@@ -1,0 +1,428 @@
+{
+ "plain-1": {
+  "desktop": {
+   "bg": "rgb(243, 245, 234)",
+   "fontTop": [
+    "\"IBM Plex Sans KR\"",
+    "Hahmlet"
+   ],
+   "fontLoaded": true,
+   "mainSize": 17,
+   "lh": 1.7,
+   "lowContrastPct": 0,
+   "minContrast": 4.95,
+   "under12pct": 0,
+   "overflowX": false,
+   "height": 4101,
+   "viewport": true,
+   "controls": 21,
+   "tinyControls": 5,
+   "fields": 1,
+   "unlabeled": 0,
+   "cssVars": 20,
+   "darkMode": false,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 1,
+   "svg": 1,
+   "hexes": 17,
+   "topHex": [
+    "#C4D4CB",
+    "#F3F5EA",
+    "#3B5A50",
+    "#FBFCF6",
+    "#16302B",
+    "#41574F"
+   ]
+  },
+  "phone": {
+   "bg": "rgb(243, 245, 234)",
+   "fontTop": [
+    "\"IBM Plex Sans KR\"",
+    "Hahmlet"
+   ],
+   "fontLoaded": true,
+   "mainSize": 16,
+   "lh": 1.7,
+   "lowContrastPct": 0,
+   "minContrast": 4.95,
+   "under12pct": 0,
+   "overflowX": false,
+   "height": 5554,
+   "viewport": true,
+   "controls": 17,
+   "tinyControls": 3,
+   "fields": 1,
+   "unlabeled": 0,
+   "cssVars": 20,
+   "darkMode": false,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 1,
+   "svg": 1,
+   "hexes": 17,
+   "topHex": [
+    "#C4D4CB",
+    "#F3F5EA",
+    "#3B5A50",
+    "#FBFCF6",
+    "#16302B",
+    "#41574F"
+   ]
+  }
+ },
+ "plain-2": {
+  "desktop": {
+   "bg": "rgb(249, 249, 247)",
+   "fontTop": [
+    "system-ui"
+   ],
+   "fontLoaded": false,
+   "mainSize": 12,
+   "lh": 1.5,
+   "lowContrastPct": 4.6,
+   "minContrast": 3.41,
+   "under12pct": 8.5,
+   "overflowX": false,
+   "height": 1653,
+   "viewport": true,
+   "controls": 9,
+   "tinyControls": 9,
+   "fields": 1,
+   "unlabeled": 0,
+   "cssVars": 55,
+   "darkMode": true,
+   "reducedMotion": false,
+   "focusVisible": true,
+   "emoji": 0,
+   "svg": 10,
+   "hexes": 23,
+   "topHex": [
+    "#898781",
+    "#2C2C2A",
+    "#C3C2B7",
+    "#F0EFEC",
+    "#D03B3B",
+    "#0D0D0D"
+   ]
+  },
+  "phone": {
+   "bg": "rgb(249, 249, 247)",
+   "fontTop": [
+    "system-ui"
+   ],
+   "fontLoaded": false,
+   "mainSize": 12,
+   "lh": 1.5,
+   "lowContrastPct": 4.8,
+   "minContrast": 3.41,
+   "under12pct": 4.1,
+   "overflowX": false,
+   "height": 3040,
+   "viewport": true,
+   "controls": 9,
+   "tinyControls": 9,
+   "fields": 1,
+   "unlabeled": 0,
+   "cssVars": 55,
+   "darkMode": true,
+   "reducedMotion": false,
+   "focusVisible": true,
+   "emoji": 0,
+   "svg": 10,
+   "hexes": 23,
+   "topHex": [
+    "#898781",
+    "#2C2C2A",
+    "#C3C2B7",
+    "#F0EFEC",
+    "#D03B3B",
+    "#0D0D0D"
+   ]
+  }
+ },
+ "plain-3": {
+  "desktop": {
+   "bg": "rgb(241, 244, 234)",
+   "fontTop": [
+    "\"Pretendard Variable\"",
+    "Jua"
+   ],
+   "fontLoaded": true,
+   "mainSize": 16,
+   "lh": 1.6,
+   "lowContrastPct": 0.6,
+   "minContrast": 3.91,
+   "under12pct": 0,
+   "overflowX": false,
+   "height": 2437,
+   "viewport": true,
+   "controls": 36,
+   "tinyControls": 3,
+   "fields": 32,
+   "unlabeled": 0,
+   "cssVars": 18,
+   "darkMode": false,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 0,
+   "svg": 7,
+   "hexes": 22,
+   "topHex": [
+    "#E4F0E8",
+    "#66746C",
+    "#15523F",
+    "#0F3F30",
+    "#17634B",
+    "#E3EFE6"
+   ]
+  },
+  "phone": {
+   "bg": "rgb(241, 244, 234)",
+   "fontTop": [
+    "\"Pretendard Variable\"",
+    "Jua"
+   ],
+   "fontLoaded": true,
+   "mainSize": 16,
+   "lh": 1.6,
+   "lowContrastPct": 0.6,
+   "minContrast": 3.91,
+   "under12pct": 0,
+   "overflowX": false,
+   "height": 3750,
+   "viewport": true,
+   "controls": 36,
+   "tinyControls": 17,
+   "fields": 32,
+   "unlabeled": 0,
+   "cssVars": 18,
+   "darkMode": false,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 0,
+   "svg": 7,
+   "hexes": 22,
+   "topHex": [
+    "#E4F0E8",
+    "#66746C",
+    "#15523F",
+    "#0F3F30",
+    "#17634B",
+    "#E3EFE6"
+   ]
+  }
+ },
+ "skill-1": {
+  "desktop": {
+   "bg": "rgb(15, 23, 42)",
+   "fontTop": [
+    "\"Noto Sans KR\""
+   ],
+   "fontLoaded": true,
+   "mainSize": 16,
+   "lh": 1.6,
+   "lowContrastPct": 0,
+   "minContrast": 5.02,
+   "under12pct": 1.5,
+   "overflowX": false,
+   "height": 6713,
+   "viewport": true,
+   "controls": 21,
+   "tinyControls": 1,
+   "fields": 1,
+   "unlabeled": 0,
+   "cssVars": 40,
+   "darkMode": false,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 1,
+   "svg": 66,
+   "hexes": 24,
+   "topHex": [
+    "#6EE7B7",
+    "#FFFFFF",
+    "#93C5FD",
+    "#1E40AF",
+    "#3B82F6",
+    "#60A5FA"
+   ]
+  },
+  "phone": {
+   "bg": "rgb(15, 23, 42)",
+   "fontTop": [
+    "\"Noto Sans KR\""
+   ],
+   "fontLoaded": true,
+   "mainSize": 16,
+   "lh": 1.6,
+   "lowContrastPct": 0,
+   "minContrast": 5.02,
+   "under12pct": 1.5,
+   "overflowX": true,
+   "height": 10148,
+   "viewport": true,
+   "controls": 16,
+   "tinyControls": 1,
+   "fields": 1,
+   "unlabeled": 0,
+   "cssVars": 40,
+   "darkMode": false,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 1,
+   "svg": 66,
+   "hexes": 24,
+   "topHex": [
+    "#6EE7B7",
+    "#FFFFFF",
+    "#93C5FD",
+    "#1E40AF",
+    "#3B82F6",
+    "#60A5FA"
+   ]
+  }
+ },
+ "skill-2": {
+  "desktop": {
+   "bg": "rgb(243, 244, 246)",
+   "fontTop": [
+    "\"Pretendard Variable\""
+   ],
+   "fontLoaded": false,
+   "mainSize": 14,
+   "lh": 1.5,
+   "lowContrastPct": 0.4,
+   "minContrast": 2.69,
+   "under12pct": 0,
+   "overflowX": false,
+   "height": 2201,
+   "viewport": true,
+   "controls": 16,
+   "tinyControls": 4,
+   "fields": 4,
+   "unlabeled": 0,
+   "cssVars": 96,
+   "darkMode": true,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 0,
+   "svg": 29,
+   "hexes": 46,
+   "topHex": [
+    "#FFFFFF",
+    "#8FB0FF",
+    "#C3C2B7",
+    "#1E40AF",
+    "#0D0D0D",
+    "#1A1A19"
+   ]
+  },
+  "phone": {
+   "bg": "rgb(243, 244, 246)",
+   "fontTop": [
+    "\"Pretendard Variable\""
+   ],
+   "fontLoaded": false,
+   "mainSize": 14,
+   "lh": 1.5,
+   "lowContrastPct": 0.4,
+   "minContrast": 2.82,
+   "under12pct": 0,
+   "overflowX": false,
+   "height": 3381,
+   "viewport": true,
+   "controls": 16,
+   "tinyControls": 4,
+   "fields": 4,
+   "unlabeled": 0,
+   "cssVars": 96,
+   "darkMode": true,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 0,
+   "svg": 29,
+   "hexes": 46,
+   "topHex": [
+    "#FFFFFF",
+    "#8FB0FF",
+    "#C3C2B7",
+    "#1E40AF",
+    "#0D0D0D",
+    "#1A1A19"
+   ]
+  }
+ },
+ "skill-3": {
+  "desktop": {
+   "bg": "rgb(240, 253, 250)",
+   "fontTop": [
+    "\"Noto Sans KR\"",
+    "Jua"
+   ],
+   "fontLoaded": true,
+   "mainSize": 16,
+   "lh": 1.6,
+   "lowContrastPct": 0,
+   "minContrast": 5.18,
+   "under12pct": 0,
+   "overflowX": false,
+   "height": 2799,
+   "viewport": true,
+   "controls": 36,
+   "tinyControls": 3,
+   "fields": 31,
+   "unlabeled": 0,
+   "cssVars": 27,
+   "darkMode": false,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 1,
+   "svg": 11,
+   "hexes": 23,
+   "topHex": [
+    "#FFFFFF",
+    "#0F766E",
+    "#F0FDFA",
+    "#7C2D12",
+    "#7F1D1D",
+    "#AE3A0B"
+   ]
+  },
+  "phone": {
+   "bg": "rgb(240, 253, 250)",
+   "fontTop": [
+    "\"Noto Sans KR\"",
+    "Jua"
+   ],
+   "fontLoaded": true,
+   "mainSize": 16,
+   "lh": 1.6,
+   "lowContrastPct": 0,
+   "minContrast": 5.18,
+   "under12pct": 0,
+   "overflowX": false,
+   "height": 4282,
+   "viewport": true,
+   "controls": 36,
+   "tinyControls": 3,
+   "fields": 31,
+   "unlabeled": 0,
+   "cssVars": 27,
+   "darkMode": false,
+   "reducedMotion": true,
+   "focusVisible": true,
+   "emoji": 1,
+   "svg": 11,
+   "hexes": 23,
+   "topHex": [
+    "#FFFFFF",
+    "#0F766E",
+    "#F0FDFA",
+    "#7C2D12",
+    "#7F1D1D",
+    "#AE3A0B"
+   ]
+  }
+ }
+}

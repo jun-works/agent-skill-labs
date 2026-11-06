@@ -1,0 +1,50 @@
+{
+ "plain-1": {
+  "seconds": 406,
+  "turns": 19,
+  "cost_usd": 1.489,
+  "input_total": 456017,
+  "output": 43823,
+  "thinking": 19301
+ },
+ "plain-2": {
+  "seconds": 574,
+  "turns": 14,
+  "cost_usd": 2.244,
+  "input_total": 724402,
+  "output": 68508,
+  "thinking": 22241
+ },
+ "plain-3": {
+  "seconds": 429,
+  "turns": 15,
+  "cost_usd": 1.509,
+  "input_total": 506859,
+  "output": 47837,
+  "thinking": 14578
+ },
+ "skill-1": {
+  "seconds": 289,
+  "turns": 12,
+  "cost_usd": 1.163,
+  "input_total": 297833,
+  "output": 33030,
+  "thinking": 5629
+ },
+ "skill-2": {
+  "seconds": 685,
+  "turns": 16,
+  "cost_usd": 2.645,
+  "input_total": 702510,
+  "output": 81191,
+  "thinking": 27390
+ },
+ "skill-3": {
+  "seconds": 416,
+  "turns": 16,
+  "cost_usd": 1.6,
+  "input_total": 568890,
+  "output": 47161,
+  "thinking": 13388
+ }
+}

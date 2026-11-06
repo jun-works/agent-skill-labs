@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한줄 | 한 줄로 끝나는 가계부</title>
+<meta name="description" content="쓴 곳과 금액만 적으면 분류와 합계, 이번 달 남은 돈은 앱이 계산합니다. 은행 연동 없이 직접 적는 가계부, 한줄.">
+<meta name="theme-color" content="#f3f5ea">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23c8321f'/%3E%3Cpath d='M7 16h18' stroke='%23fff' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --paper: #f3f5ea;
+    --sheet: #fbfcf6;
+    --ink: #16302b;
+    --ink-2: #41574f;
+    --ink-3: #5a6e65;
+    --rule: #c9d8c6;
+    --rule-soft: #dfe8da;
+    --red: #c8321f;
+    --green: #1d6b52;
+    --green-soft: #8fae9c;
+    --green-track: #dbe6dc;
+    --green-wash: #e3eddd;
+    --deep: #12352c;
+    --warning: #fab219;
+    --warning-track: #fbeccb;
+
+    --sans: "IBM Plex Sans KR", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    --serif: "Hahmlet", "AppleMyungjo", "Noto Serif KR", "Batang", serif;
+
+    --gutter: max(20px, calc((100vw - 1200px) / 2));
+    --margin: 92px;
+    --gap: 32px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.7;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  h1, h2, h3, p, ul, ol, figure { margin: 0; padding: 0; }
+  ul, ol { list-style: none; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--red); outline-offset: 2px; border-radius: 2px; }
+
+  .skip {
+    position: absolute; left: 12px; top: -60px; z-index: 10;
+    background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 4px;
+  }
+  .skip:focus { top: 12px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* 장부의 붉은 겹줄: 페이지 전체를 관통하는 왼쪽 여백선 */
+  .page { position: relative; overflow-x: clip; }
+  .page::before {
+    content: "";
+    position: absolute; top: 0; bottom: 0; z-index: 1;
+    left: calc(var(--gutter) + var(--margin) + var(--gap) / 2);
+    width: 4px;
+    border-left: 1px solid var(--red);
+    border-right: 1px solid var(--red);
+    opacity: .55;
+    pointer-events: none;
+  }
+
+  .row {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--margin) minmax(0, 1fr);
+    column-gap: var(--gap);
+    padding-inline: var(--gutter);
+  }
+  .tag {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-3);
+    text-align: right;
+    padding-top: 12px;
+  }
+  .tag b { display: block; font-family: var(--serif); font-weight: 500; font-size: 22px; color: var(--ink); line-height: 1.2; }
+
+  section.row { border-top: 1px solid var(--rule); padding-block: 96px; }
+  h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(1.875rem, 3.4vw, 2.75rem);
+    line-height: 1.3;
+    letter-spacing: -.02em;
+    text-wrap: balance;
+  }
+  .lede { color: var(--ink-2); margin-top: 18px; max-width: 34em; }
+
+  /* 헤더 */
+  header.row { align-items: center; padding-block: 18px; }
+  .brand {
+    display: inline-flex; align-items: center; gap: 10px;
+        font-family: var(--serif); font-weight: 700; font-size: 22px; text-decoration: none;
+    min-height: 44px;
+  }
+  .seal {
+    display: grid; place-items: center;
+    width: 30px; height: 30px; border-radius: 5px;
+    background: var(--red);
+  }
+  .seal::after { content: ""; width: 16px; height: 3px; border-radius: 2px; background: #fff; }
+  .topbar { grid-column: 2; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .topbar nav { display: flex; align-items: center; gap: 28px; font-size: 15px; }
+  .topbar nav a:not(.btn) { text-decoration: none; color: var(--ink-2); padding-block: 10px; }
+  .topbar nav a:not(.btn):hover { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 8px 20px;
+    border: 1px solid var(--ink); border-radius: 6px;
+    background: var(--ink); color: #fff;
+    font: inherit; font-size: 15px; font-weight: 600;
+    text-decoration: none; cursor: pointer;
+    transition: background-color .15s;
+  }
+  .btn:hover { background: var(--green); border-color: var(--green); }
+  .btn-lg { min-height: 52px; padding-inline: 26px; font-size: 16px; }
+
+  /* 히어로 */
+  .hero { padding-block: 48px 88px; }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: center;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 4.3vw, 3.6rem);
+    line-height: 1.22;
+    letter-spacing: -.03em;
+  }
+  .hero .lede { font-size: 18px; }
+  .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 30px; }
+  .hero-cta span { font-size: 14px; color: var(--ink-3); }
+
+  /* 장부 데모 */
+  .ledger {
+    background: var(--sheet);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    box-shadow: 0 1px 0 #fff inset, 0 18px 40px -24px rgba(22, 48, 43, .35);
+    overflow: hidden;
+  }
+  .ledger-form { padding: 18px 18px 14px; }
+  .ledger-form label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .ledger-input { display: flex; gap: 8px; }
+  .ledger-input input {
+    flex: 1; min-width: 0; min-height: 48px; padding: 8px 14px;
+    border: 1px solid var(--ink-3); border-radius: 6px;
+    background: #fff; color: var(--ink);
+    font: inherit; font-size: 17px;
+  }
+  .ledger-input input::placeholder { color: var(--ink-3); }
+  .ledger-input input[aria-invalid="true"] { border-color: var(--red); }
+  .ledger-input .btn { min-height: 48px; flex: none; }
+  .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+  .chips > span { font-size: 13px; color: var(--ink-3); margin-right: 4px; }
+  .chip {
+    min-height: 32px; padding: 3px 11px;
+    border: 1px solid var(--rule); border-radius: 999px;
+    background: transparent; color: var(--ink-2);
+    font: inherit; font-size: 13px; cursor: pointer;
+    position: relative;
+  }
+  .chip::after { content: ""; position: absolute; inset: -6px 0; } /* 터치 영역 확장 */
+  .chip:hover { background: var(--green-wash); border-color: var(--green-soft); color: var(--ink); }
+  .hint { min-height: 22px; margin-top: 6px; font-size: 13.5px; line-height: 22px; color: var(--ink-2); }
+  .hint.err { color: var(--red); font-weight: 500; }
+
+  .ledger table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 15px; }
+  .ledger th {
+    padding: 7px 8px; text-align: left; font-size: 12.5px; font-weight: 600; color: var(--ink-2);
+    border-top: 1px solid var(--rule);
+    border-bottom: 3px double var(--red);
+  }
+  .ledger td {
+    height: 42px; padding: 0 8px;
+    border-bottom: 1px solid var(--rule-soft);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ledger th:first-child, .ledger td:first-child { padding-left: 18px; }
+  .ledger th:last-child, .ledger td:last-child { padding-right: 18px; }
+  .c-date { width: 62px; color: var(--ink-3); }
+  .c-cat { width: 96px; }
+  .c-amt, .c-bal { text-align: right !important; font-variant-numeric: tabular-nums; }
+  .c-amt { width: 104px; }
+  .c-bal { width: 104px; color: var(--ink-2); }
+  .pill {
+    display: inline-block; padding: 0 7px; font-size: 12.5px; line-height: 21px;
+    border: 1px solid var(--green-soft); border-radius: 4px; color: var(--ink);
+  }
+  tr.is-new td { animation: ink 1.4s ease-out; }
+  tr.is-new .pill { animation: stamp .3s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes ink { from { background: var(--green-wash); } to { background: transparent; } }
+  @keyframes stamp { from { transform: scale(1.5); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  .ledger-foot {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 16px;
+    padding: 14px 18px 16px;
+  }
+  .ledger-foot strong { font-size: 19px; font-weight: 700; }
+  .ledger-foot .sub { font-size: 14px; color: var(--ink-2); }
+  .ledger-foot .over { color: var(--red); font-weight: 600; }
+
+  /* 01 다섯 칸 */
+  .cells {
+    display: grid;
+    grid-template-columns: .7fr 1.7fr .9fr 1fr 1fr;
+    margin-top: 44px;
+    background: var(--sheet);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .cell { padding: 16px 18px 18px; border-left: 1px solid var(--rule-soft); min-width: 0; }
+  .cell:first-child { border-left: 0; }
+  .cell dt { font-size: 13px; color: var(--ink-3); }
+  .cell dd.val { margin: 6px 0 14px; font-size: 22px; font-weight: 600; line-height: 1.35; white-space: nowrap; }
+  .cell.mine { background: var(--ink); color: #fff; }
+  .cell.mine dt { color: #c4d4cb; }
+  .cell dd.who { margin: 0; font-size: 12.5px; color: var(--ink-2); }
+  .cell.mine dd.who { color: #fff; }
+  .formats { margin-top: 26px; font-size: 15px; color: var(--ink-2); }
+  .formats code {
+    font-family: inherit; font-weight: 500; color: var(--ink);
+    padding: 2px 8px; background: var(--green-wash); border-radius: 4px; white-space: nowrap;
+  }
+
+  /* 02 예산 */
+  .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+  .notes { margin-top: 30px; border-top: 1px solid var(--rule); }
+  .notes li { padding: 14px 0; border-bottom: 1px solid var(--rule); color: var(--ink-2); font-size: 16px; }
+  .notes b { color: var(--ink); font-weight: 600; margin-right: 6px; }
+
+  .phone {
+    width: min(100%, 352px); justify-self: center;
+    padding: 26px 22px 24px;
+    background: var(--sheet);
+    border: 7px solid var(--ink);
+    border-radius: 38px;
+    box-shadow: 0 30px 50px -32px rgba(22, 48, 43, .55);
+  }
+  .phone .when { font-size: 13px; color: var(--ink-3); }
+  .phone .figure-label { margin-top: 12px; font-size: 14.5px; font-weight: 500; }
+  .phone .figure { font-size: 48px; font-weight: 700; line-height: 1.15; letter-spacing: -.02em; }
+  .phone .figure small { font-size: 22px; font-weight: 600; margin-left: 2px; letter-spacing: 0; }
+  .phone .figure-sub { margin-top: 4px; font-size: 13.5px; color: var(--ink-2); }
+  .meters { margin-top: 20px; border-top: 1px solid var(--rule-soft); padding-top: 4px; }
+  .meters li { padding-top: 11px; }
+  .meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; line-height: 1.4; }
+  .meter-head span:first-child { font-weight: 500; }
+  .meter-head span:last-child { font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .meter { height: 8px; margin-top: 5px; border-radius: 999px; background: var(--green-track); overflow: hidden; }
+  .meter i { display: block; height: 100%; border-radius: 999px; background: var(--green); width: var(--p); }
+  .meter.warn { background: var(--warning-track); }
+  .meter.warn i { background: var(--warning); }
+  .status { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12.5px; line-height: 1.4; color: var(--ink); font-weight: 500; }
+  .status svg { flex: none; }
+
+  /* 03 차트 */
+  .chart-card {
+    padding: 24px 24px 18px;
+    background: var(--sheet);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    min-width: 0;
+  }
+  .chart-title { font-size: 14.5px; font-weight: 500; color: var(--ink-2); }
+  .chart-value { font-size: 34px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
+  .chart-delta { font-size: 14px; color: var(--ink-2); }
+  .plot { position: relative; height: 216px; margin: 34px 0 34px 44px; }
+  .grid-line {
+    position: absolute; left: 0; right: 0;
+    bottom: calc(var(--t) / 18000 * 1%);
+    border-top: 1px solid var(--rule-soft);
+  }
+  .grid-line.base { border-top-color: var(--green-soft); }
+  .grid-line span {
+    position: absolute; right: 100%; top: -10px; margin-right: 8px;
+    font-size: 12px; line-height: 20px; color: var(--ink-3);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .cols { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(6, 1fr); }
+  .col {
+    position: relative; display: block; height: 100%; padding: 0;
+    border: 0; background: none; color: inherit; font: inherit; cursor: default;
+  }
+  .col .bar {
+    position: absolute; bottom: 0; left: 50%; width: 24px; margin-left: -12px;
+    height: calc(var(--v) / 18000 * 1%);
+    border-radius: 4px 4px 0 0;
+    background: var(--green-soft);
+    transition: filter .12s;
+  }
+  .col.now .bar { background: var(--green); }
+  .col:hover .bar, .col:focus-visible .bar { filter: brightness(.85); }
+  .col .cap {
+    position: absolute; left: 0; right: 0; text-align: center;
+    bottom: calc(var(--v) / 18000 * 1% + 4px);
+    font-size: 12.5px; font-weight: 600; line-height: 1.3; white-space: nowrap;
+  }
+  .col .m {
+    position: absolute; left: 0; right: 0; top: 100%; padding-top: 8px; text-align: center;
+    font-size: 13px; line-height: 1.3; color: var(--ink-2);
+  }
+  .tip {
+    position: absolute; z-index: 2; transform: translate(-50%, -100%);
+    padding: 5px 10px; border-radius: 5px;
+    background: var(--ink); color: #fff;
+    font-size: 13px; line-height: 1.4; white-space: nowrap; pointer-events: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .chart-card details { border-top: 1px solid var(--rule-soft); padding-top: 6px; font-size: 14px; }
+  .chart-card summary { cursor: pointer; color: var(--ink-2); padding-block: 8px; }
+  .chart-card table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+  .chart-card th, .chart-card td { padding: 5px 0; border-bottom: 1px solid var(--rule-soft); font-weight: 400; text-align: left; }
+  .chart-card thead th { color: var(--ink-3); font-size: 13px; }
+  .chart-card td:last-child, .chart-card thead th:last-child { text-align: right; }
+
+  /* 04 어두운 면 */
+  section.dark {
+    background: var(--deep); color: #f3f5ea; border-top: 0;
+  }
+  .dark .tag, .dark .tag b { color: #c4d4cb; }
+  .dark .lede { color: #c4d4cb; }
+  .promises { border-top: 1px solid #3b5a50; }
+  .promises li { padding: 22px 0; border-bottom: 1px solid #3b5a50; }
+  .promises h3 { font-size: 18px; font-weight: 600; line-height: 1.5; }
+  .promises p { margin-top: 4px; font-size: 15.5px; color: #c4d4cb; }
+
+  /* 05 FAQ */
+  .faq { margin-top: 36px; border-top: 1px solid var(--rule); max-width: 760px; }
+  .faq details { border-bottom: 1px solid var(--rule); }
+  .faq summary {
+    display: flex; justify-content: space-between; gap: 16px; align-items: center;
+    padding: 18px 0; cursor: pointer; font-weight: 600; list-style: none;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; flex: none; font-size: 22px; font-weight: 400; line-height: 1; color: var(--ink-2); }
+  .faq details[open] summary::after { content: "−"; }
+  .faq details p { padding: 0 32px 20px 0; color: var(--ink-2); }
+
+  /* 내려받기 */
+  .cta h2 { font-size: clamp(2.25rem, 5vw, 4rem); }
+  .cta .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+  .btn-ghost { background: transparent; color: var(--ink); }
+  .btn-ghost:hover { color: #fff; }
+
+  footer.row { border-top: 1px solid var(--rule); padding-block: 26px 34px; font-size: 13.5px; color: var(--ink-3); }
+  footer > div { grid-column: 2; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 24px; }
+
+  @media (max-width: 1040px) {
+    .hero-grid, .split { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+    h1 { font-size: clamp(2.5rem, 7vw, 3.75rem); }
+    .cells { grid-template-columns: .7fr 1.7fr .9fr; }
+    .cell:nth-child(4) { border-left: 0; }
+    .cell:nth-child(n+4) { border-top: 1px solid var(--rule-soft); }
+    .order-chart { order: 2; }
+  }
+
+  @media (max-width: 760px) {
+    body { font-size: 16px; }
+    .page::before { display: none; }
+    .row { grid-template-columns: minmax(0, 1fr); }
+    .brand, .topbar, footer > div { grid-column: 1; }
+    .tag { text-align: left; padding: 0 0 14px; display: flex; gap: 8px; align-items: baseline; }
+    .tag b { display: inline; font-size: 18px; }
+    .tag:empty { display: none; }
+    section.row { padding-block: 64px; }
+    .hero { padding-block: 24px 56px; }
+    .topbar nav a:not(.btn) { display: none; }
+    .cells { grid-template-columns: minmax(0, 1fr); }
+    .cell { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 12px 16px; border-left: 0; border-top: 1px solid var(--rule-soft); }
+    .cell:first-child { border-top: 0; }
+    .cell dd.val { margin: 0; font-size: 17px; white-space: normal; }
+  }
+
+  @media (max-width: 560px) {
+    .c-date { display: none; }
+    .c-bal { display: none; }
+    .ledger th:nth-child(2), .ledger td:nth-child(2) { padding-left: 16px; }
+    .c-amt { width: 112px; }
+    .ledger th.c-amt, .ledger td.c-amt { padding-right: 16px; }
+    .chart-card { padding-inline: 16px; }
+    .chart-value { font-size: 30px; }
+    .col .bar { width: 22px; margin-left: -11px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+<div class="page">
+
+  <header class="row">
+    <div class="topbar">
+      <a class="brand" href="#main" aria-label="한줄 홈"><span class="seal" aria-hidden="true"></span>한줄</a>
+      <nav aria-label="주요 메뉴">
+        <a href="#write">적기</a>
+        <a href="#budget">예산</a>
+        <a href="#review">돌아보기</a>
+        <a href="#privacy">개인정보</a>
+        <a class="btn" href="#download">앱 내려받기</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="row hero">
+      <div class="tag" aria-hidden="true"></div>
+      <div class="hero-grid">
+        <div>
+          <h1>가계부는<br>한 줄이면<br>됩니다.</h1>
+          <p class="lede">쓴 곳과 금액만 적으세요. 분류와 합계, 이번 달 남은 돈은 앱이 계산합니다.</p>
+          <div class="hero-cta">
+            <a class="btn btn-lg" href="#download">앱 내려받기</a>
+            <span>iOS · Android</span>
+          </div>
+        </div>
+
+        <div class="ledger">
+          <form class="ledger-form" id="ledger-form" novalidate>
+            <label for="entry">여기에 직접 적어 보세요</label>
+            <div class="ledger-input">
+              <input id="entry" type="text" maxlength="40" autocomplete="off" placeholder="점심 김치찌개 9000" aria-describedby="hint">
+              <button class="btn" type="submit">적기</button>
+            </div>
+            <div class="chips">
+              <span>눌러 보기</span>
+              <button class="chip" type="button">점심 김치찌개 9000</button>
+              <button class="chip" type="button">택시 1만2천원</button>
+              <button class="chip" type="button">월급 2500000</button>
+            </div>
+            <p class="hint" id="hint" role="status">적은 내용은 저장되지 않는 체험판입니다.</p>
+          </form>
+          <table>
+            <caption class="sr-only">이번 달 장부 예시</caption>
+            <thead>
+              <tr>
+                <th class="c-date" scope="col">날짜</th>
+                <th scope="col">내용</th>
+                <th class="c-cat" scope="col">분류</th>
+                <th class="c-amt" scope="col">금액</th>
+                <th class="c-bal" scope="col">잔액</th>
+              </tr>
+            </thead>
+            <tbody id="ledger-body">
+              <tr><td class="c-date">어제</td><td>장보기</td><td class="c-cat"><span class="pill">식비</span></td><td class="c-amt">38,200</td><td class="c-bal">384,100</td></tr>
+              <tr><td class="c-date">오늘</td><td>버스</td><td class="c-cat"><span class="pill">교통</span></td><td class="c-amt">1,500</td><td class="c-bal">382,600</td></tr>
+              <tr><td class="c-date">오늘</td><td>아메리카노</td><td class="c-cat"><span class="pill">카페·간식</span></td><td class="c-amt">4,500</td><td class="c-bal">378,100</td></tr>
+              <tr><td class="c-date">&nbsp;</td><td></td><td class="c-cat"></td><td class="c-amt"></td><td class="c-bal"></td></tr>
+              <tr><td class="c-date">&nbsp;</td><td></td><td class="c-cat"></td><td class="c-amt"></td><td class="c-bal"></td></tr>
+            </tbody>
+          </table>
+          <div class="ledger-foot" aria-live="polite">
+            <span>이번 달 남은 돈 <strong id="left">378,100원</strong></span>
+            <span class="sub" id="per-day">남은 10일, 하루 37,810원</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="row" id="write">
+      <div class="tag"><b>01</b>적기</div>
+      <div>
+        <h2>다섯 칸 중 두 칸만 적습니다.</h2>
+        <p class="lede">가계부가 밀리는 이유는 대개 칸이 많아서입니다. 나머지 세 칸은 앱이 채우고, 잘못 분류한 항목을 한 번 고치면 다음부터 그대로 기억합니다.</p>
+        <dl class="cells">
+          <div class="cell"><dt>날짜</dt><dd class="val">오늘</dd><dd class="who">앱이 채움</dd></div>
+          <div class="cell mine"><dt>내용</dt><dd class="val">점심 김치찌개</dd><dd class="who">내가 적음</dd></div>
+          <div class="cell mine"><dt>금액</dt><dd class="val">9,000원</dd><dd class="who">내가 적음</dd></div>
+          <div class="cell"><dt>분류</dt><dd class="val">식비</dd><dd class="who">앱이 채움</dd></div>
+          <div class="cell"><dt>잔액</dt><dd class="val">369,100원</dd><dd class="who">앱이 채움</dd></div>
+        </dl>
+        <p class="formats">평소 쓰는 말투 그대로 적어도 됩니다. <code>커피 4500</code> <code>택시 1만2천원</code> <code>월급 2500000</code></p>
+      </div>
+    </section>
+
+    <section class="row" id="budget">
+      <div class="tag"><b>02</b>예산</div>
+      <div class="split">
+        <div>
+          <h2>남은 돈보다,<br>오늘 써도 되는 돈.</h2>
+          <p class="lede">37만 원이 남았다는 말로는 오늘 저녁 약속에 가도 될지 판단하기 어렵습니다. 한줄은 남은 예산을 남은 날짜로 나눠 하루치 금액으로 보여 줍니다.</p>
+          <ul class="notes">
+            <li><b>매일 다시 계산</b>많이 쓴 다음 날은 줄고, 아낀 다음 날은 늘어납니다.</li>
+            <li><b>분류별 예산</b>식비, 교통처럼 묶음마다 한도를 정해 둘 수 있습니다.</li>
+            <li><b>넘기 전에 알림</b>한도의 80%를 넘으면 미리 알려 줍니다.</li>
+          </ul>
+        </div>
+        <figure class="phone" aria-label="한줄 앱의 예산 화면 예시">
+          <p class="when">11월 20일 · 예시 화면</p>
+          <p class="figure-label">오늘 쓸 수 있는 돈</p>
+          <p class="figure">37,810<small>원</small></p>
+          <p class="figure-sub">이번 달 남은 돈 378,100원 · 10일 남음</p>
+          <ul class="meters">
+            <li>
+              <div class="meter-head"><span>카페·간식</span><span>71,500 / 80,000</span></div>
+              <div class="meter warn" aria-hidden="true"><i style="--p:89%"></i></div>
+              <p class="status">
+                <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 15 14H1z" fill="#fab219" stroke="#16302b" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 6v4M8 11.6v.4" stroke="#16302b" stroke-width="1.5" stroke-linecap="round"/></svg>
+                8,500원 남음, 한도 89%
+              </p>
+            </li>
+            <li>
+              <div class="meter-head"><span>식비</span><span>312,000 / 450,000</span></div>
+              <div class="meter" aria-hidden="true"><i style="--p:69%"></i></div>
+            </li>
+            <li>
+              <div class="meter-head"><span>교통</span><span>58,400 / 100,000</span></div>
+              <div class="meter" aria-hidden="true"><i style="--p:58%"></i></div>
+            </li>
+            <li>
+              <div class="meter-head"><span>생활</span><span>96,000 / 200,000</span></div>
+              <div class="meter" aria-hidden="true"><i style="--p:48%"></i></div>
+            </li>
+            <li>
+              <div class="meter-head"><span>문화·여가</span><span>64,000 / 150,000</span></div>
+              <div class="meter" aria-hidden="true"><i style="--p:43%"></i></div>
+            </li>
+            <li>
+              <div class="meter-head"><span>고정비 (납부 완료)</span><span>520,000 / 520,000</span></div>
+              <div class="meter" aria-hidden="true"><i style="--p:100%"></i></div>
+            </li>
+          </ul>
+        </figure>
+      </div>
+    </section>
+
+    <section class="row" id="review">
+      <div class="tag"><b>03</b>돌아보기</div>
+      <div class="split">
+        <figure class="chart-card order-chart">
+          <p class="chart-title">월별 지출 · 예시 화면</p>
+          <p class="chart-value">1,338,000원</p>
+          <p class="chart-delta">10월 지출, 7월보다 310,000원 적음</p>
+          <div class="plot" id="plot">
+            <div class="grid-line base" style="--t:0"><span>0</span></div>
+            <div class="grid-line" style="--t:500000"><span>50만</span></div>
+            <div class="grid-line" style="--t:1000000"><span>100만</span></div>
+            <div class="grid-line" style="--t:1500000"><span>150만</span></div>
+            <div class="cols">
+              <button class="col" type="button" style="--v:1386000" data-m="5월" data-a="1,386,000원" aria-label="5월 1,386,000원"><span class="bar"></span><span class="m">5월</span></button>
+              <button class="col" type="button" style="--v:1512000" data-m="6월" data-a="1,512,000원" aria-label="6월 1,512,000원"><span class="bar"></span><span class="m">6월</span></button>
+              <button class="col" type="button" style="--v:1648000" data-m="7월" data-a="1,648,000원" aria-label="7월 1,648,000원"><span class="bar"></span><span class="cap" aria-hidden="true">164.8만</span><span class="m">7월</span></button>
+              <button class="col" type="button" style="--v:1455000" data-m="8월" data-a="1,455,000원" aria-label="8월 1,455,000원"><span class="bar"></span><span class="m">8월</span></button>
+              <button class="col" type="button" style="--v:1402000" data-m="9월" data-a="1,402,000원" aria-label="9월 1,402,000원"><span class="bar"></span><span class="m">9월</span></button>
+              <button class="col now" type="button" style="--v:1338000" data-m="10월" data-a="1,338,000원" aria-label="10월 1,338,000원"><span class="bar"></span><span class="cap" aria-hidden="true">133.8만</span><span class="m">10월</span></button>
+            </div>
+            <div class="tip" id="tip" hidden></div>
+          </div>
+          <details>
+            <summary>표로 보기</summary>
+            <table>
+              <thead><tr><th scope="col">월</th><th scope="col">지출</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">5월</th><td>1,386,000원</td></tr>
+                <tr><th scope="row">6월</th><td>1,512,000원</td></tr>
+                <tr><th scope="row">7월</th><td>1,648,000원</td></tr>
+                <tr><th scope="row">8월</th><td>1,455,000원</td></tr>
+                <tr><th scope="row">9월</th><td>1,402,000원</td></tr>
+                <tr><th scope="row">10월</th><td>1,338,000원</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </figure>
+        <div>
+          <h2>월말 정산은<br>앱이 해 둡니다.</h2>
+          <p class="lede">달이 끝나면 얼마를 썼고 어느 분류에서 늘었는지 정리해 드립니다. 영수증을 모아 계산기를 두드릴 필요가 없습니다.</p>
+          <ul class="notes">
+            <li><b>달별 비교</b>지난달, 작년 같은 달과 나란히 봅니다.</li>
+            <li><b>늘어난 이유</b>평소보다 크게 늘어난 분류를 먼저 짚어 줍니다.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="row dark" id="privacy">
+      <div class="tag"><b>04</b>개인정보</div>
+      <div class="split" style="align-items:start">
+        <div>
+          <h2>은행 비밀번호를<br>받지 않습니다.</h2>
+          <p class="lede">돈 쓴 기록은 꽤 사적인 정보입니다. 그래서 처음부터 모으지 않는 쪽으로 만들었습니다.</p>
+        </div>
+        <ul class="promises">
+          <li>
+            <h3>계좌·카드 연동 없음</h3>
+            <p>인증서도, 은행 로그인도 필요 없습니다. 직접 적은 내용만 기록됩니다.</p>
+          </li>
+          <li>
+            <h3>내 휴대폰에만 저장</h3>
+            <p>회원가입 없이 바로 시작하고, 기록은 기기 안에 남습니다.</p>
+          </li>
+          <li>
+            <h3>언제든 파일로 내보내기</h3>
+            <p>CSV 파일로 내보내 엑셀이나 다른 앱에서 그대로 열 수 있습니다.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="row" id="faq">
+      <div class="tag"><b>05</b>질문</div>
+      <div>
+        <h2>자주 묻는 질문</h2>
+        <div class="faq">
+          <details>
+            <summary>카드 결제 내역이 자동으로 들어오나요?</summary>
+            <p>아니요. 한줄은 직접 적는 가계부입니다. 번거로워 보일 수 있지만, 한 줄을 적는 데 몇 초면 충분하고 적는 동안 내가 얼마를 썼는지 한 번 더 보게 됩니다.</p>
+          </details>
+          <details>
+            <summary>며칠 빼먹으면 어떻게 하나요?</summary>
+            <p>빠진 날을 다 채우지 않아도 됩니다. 실제 잔액만 입력하면 차액을 한 줄로 정리하고, 오늘부터 이어서 적을 수 있습니다.</p>
+          </details>
+          <details>
+            <summary>휴대폰을 바꾸면 기록은 어떻게 되나요?</summary>
+            <p>기존 휴대폰에서 파일로 내보낸 뒤 새 휴대폰에서 불러오면 그대로 옮겨집니다.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="row cta" id="download">
+      <div class="tag" aria-hidden="true"></div>
+      <div>
+        <h2>오늘 쓴 돈부터 한 줄.</h2>
+        <p class="lede">가입 없이 바로 적을 수 있습니다.</p>
+        <div class="btns">
+          <a class="btn btn-lg" href="#download">App Store에서 받기</a>
+          <a class="btn btn-lg btn-ghost" href="#download">Google Play에서 받기</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="row">
+    <div>
+      <span>© 2026 한줄</span>
+      <span>이 페이지의 금액과 화면은 모두 예시입니다.</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- 한 줄 입력 체험 ---------- */
+  var DAYS_LEFT = 10;
+  var VISIBLE_ROWS = 5;
+  var CATEGORIES = [
+    ['수입', /월급|급여|용돈|보너스|상여|환급|입금|알바비/],
+    ['카페·간식', /커피|카페|아메리카노|라떼|스타벅스|스벅|빵|디저트|간식|편의점|아이스크림/],
+    ['식비', /점심|저녁|아침|식당|찌개|국밥|치킨|피자|마트|장보기|배달|라면|김밥|떡볶이|삼겹살|회식|밥/],
+    ['교통', /택시|버스|지하철|주유|기름|교통|ktx|기차|톨게이트|주차/i],
+    ['생활', /휴지|세제|다이소|병원|약국|미용실|통신|전기|가스|관리비|월세/],
+    ['문화·여가', /영화|서점|공연|전시|넷플릭스|게임|여행|노래방|헬스/]
+  ];
+
+  var rows = [
+    { date: '어제', text: '장보기', cat: '식비', amount: -38200, balance: 384100 },
+    { date: '오늘', text: '버스', cat: '교통', amount: -1500, balance: 382600 },
+    { date: '오늘', text: '아메리카노', cat: '카페·간식', amount: -4500, balance: 378100 }
+  ];
+  var balance = 378100;
+
+  var form = document.getElementById('ledger-form');
+  var input = document.getElementById('entry');
+  var hint = document.getElementById('hint');
+  var body = document.getElementById('ledger-body');
+  var left = document.getElementById('left');
+  var perDay = document.getElementById('per-day');
+  var HINT_DEFAULT = hint.textContent;
+
+  function won(n) { return Math.abs(n).toLocaleString('ko-KR'); }
+
+  function toNumber(token) {
+    var total = 0, section = 0, m;
+    var re = /(\d[\d,]*(?:\.\d+)?)\s*([억만천백]?)/g;
+    while ((m = re.exec(token))) {
+      var n = parseFloat(m[1].replace(/,/g, ''));
+      if (m[2] === '억') { total += (section + n) * 1e8; section = 0; }
+      else if (m[2] === '만') { total += (section + n) * 1e4; section = 0; }
+      else if (m[2] === '천') { section += n * 1000; }
+      else if (m[2] === '백') { section += n * 100; }
+      else { section += n; }
+    }
+    return Math.round(total + section);
+  }
+
+  /* 금액은 "9000", "4,500원", "1만2천원", "+2500000"처럼 공백으로 구분된 토큰으로 인식합니다.
+     "2잔", "3인"처럼 숫자 뒤에 다른 글자가 붙으면 금액으로 보지 않습니다. */
+  function parseLine(raw) {
+    /* "점심 만원"처럼 숫자 없이 쓴 만원만 10000으로 바꿉니다. "3 만원"은 그대로 둡니다. */
+    var line = raw.trim().replace(/(^|\S)(\s*)만\s*원(?=\s|$)/, function (whole, prev, gap) {
+      if (/\d/.test(prev) || (prev && !gap)) { return whole; }
+      return prev + gap + '10000원';
+    });
+    var re = /(^|\s)([+＋]?)\s*((?:\d[\d,]*(?:\.\d+)?\s*[억만천백]\s*)*\d*[\d,]*)\s*원?(?=\s|$)/g;
+    var found = null, m;
+    while ((m = re.exec(line))) {
+      if (/\d/.test(m[3])) { found = m; }
+      if (m.index === re.lastIndex) { re.lastIndex++; }
+    }
+    if (!found) { return { error: '금액을 찾지 못했어요. 숫자로 함께 적어 주세요. 예: 커피 4500' }; }
+
+    var amount = toNumber(found[3]);
+    if (!amount || amount > 999999999) { return { error: '금액을 다시 확인해 주세요.' }; }
+
+    var text = (line.slice(0, found.index) + ' ' + line.slice(found.index + found[0].length)).replace(/\s+/g, ' ').trim();
+    if (!text) { return { error: '어디에 썼는지도 함께 적어 주세요. 예: 커피 4500' }; }
+
+    var cat = '기타';
+    for (var i = 0; i < CATEGORIES.length; i++) {
+      if (CATEGORIES[i][1].test(text)) { cat = CATEGORIES[i][0]; break; }
+    }
+    var isIncome = found[2] !== '' || cat === '수입';
+    if (found[2] !== '') { cat = '수입'; }
+    return { text: text, cat: cat, amount: isIncome ? amount : -amount };
+  }
+
+  function cell(className, value) {
+    var td = document.createElement('td');
+    if (className) { td.className = className; }
+    if (value !== undefined) { td.textContent = value; }
+    return td;
+  }
+
+  function render(newest) {
+    body.textContent = '';
+    var shown = rows.slice(-VISIBLE_ROWS);
+    for (var i = 0; i < VISIBLE_ROWS; i++) {
+      var r = shown[i];
+      var tr = document.createElement('tr');
+      if (!r) {
+        var blank = cell('c-date'); blank.innerHTML = '&nbsp;';
+        tr.appendChild(blank);
+        tr.appendChild(cell());
+        tr.appendChild(cell('c-cat'));
+        tr.appendChild(cell('c-amt'));
+        tr.appendChild(cell('c-bal'));
+      } else {
+        if (r === newest) { tr.className = 'is-new'; }
+        tr.appendChild(cell('c-date', r.date));
+        var textCell = cell('', r.text);
+        textCell.title = r.text;
+        tr.appendChild(textCell);
+        var catCell = cell('c-cat');
+        var pill = document.createElement('span');
+        pill.className = 'pill';
+        pill.textContent = r.cat;
+        catCell.appendChild(pill);
+        tr.appendChild(catCell);
+        tr.appendChild(cell('c-amt', (r.amount > 0 ? '+' : '') + won(r.amount)));
+        tr.appendChild(cell('c-bal', (r.balance < 0 ? '−' : '') + won(r.balance)));
+      }
+      body.appendChild(tr);
+    }
+
+    left.textContent = (balance < 0 ? '−' : '') + won(balance) + '원';
+    if (balance < 0) {
+      perDay.textContent = '예산을 ' + won(balance) + '원 넘었어요';
+      perDay.className = 'sub over';
+    } else {
+      perDay.textContent = '남은 ' + DAYS_LEFT + '일, 하루 ' + won(Math.floor(balance / DAYS_LEFT)) + '원';
+      perDay.className = 'sub';
+    }
+  }
+
+  function setHint(message, isError) {
+    hint.textContent = message;
+    hint.classList.toggle('err', !!isError);
+    if (isError) { input.setAttribute('aria-invalid', 'true'); }
+    else { input.removeAttribute('aria-invalid'); }
+  }
+
+  function submitLine(raw) {
+    if (!raw.trim()) { setHint('한 줄을 적어 주세요. 예: 커피 4500', true); input.focus(); return; }
+    var parsed = parseLine(raw);
+    if (parsed.error) { setHint(parsed.error, true); input.focus(); return; }
+
+    balance += parsed.amount;
+    var row = { date: '오늘', text: parsed.text, cat: parsed.cat, amount: parsed.amount, balance: balance };
+    rows.push(row);
+    render(row);
+    input.value = '';
+    setHint(parsed.cat === '기타'
+      ? '분류를 몰라 기타로 두었어요. 앱에서 한 번 고치면 다음부터 기억합니다.'
+      : parsed.cat + ' 항목에 적었어요.');
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitLine(input.value);
+    input.focus();
+  });
+  input.addEventListener('input', function () {
+    if (input.getAttribute('aria-invalid')) { setHint(HINT_DEFAULT); }
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (chip) {
+    chip.addEventListener('click', function () { submitLine(chip.textContent); });
+  });
+
+  /* ---------- 차트 툴팁 (hover, 터치, 키보드 공통) ---------- */
+  var plot = document.getElementById('plot');
+  var tip = document.getElementById('tip');
+  function showTip(col) {
+    var p = plot.getBoundingClientRect();
+    var c = col.getBoundingClientRect();
+    var bar = col.querySelector('.bar').getBoundingClientRect();
+    var half = 62;
+    var x = Math.min(Math.max(c.left + c.width / 2 - p.left, half - 44), p.width - half + 16);
+    tip.textContent = col.dataset.m + ' ' + col.dataset.a;
+    tip.style.left = x + 'px';
+    tip.style.top = (bar.top - p.top - 6) + 'px';
+    tip.hidden = false;
+  }
+  function hideTip() { tip.hidden = true; }
+  Array.prototype.forEach.call(plot.querySelectorAll('.col'), function (col) {
+    col.addEventListener('pointerenter', function () { showTip(col); });
+    col.addEventListener('pointerleave', hideTip);
+    col.addEventListener('focus', function () { showTip(col); });
+    col.addEventListener('blur', hideTip);
+    col.addEventListener('click', function () { showTip(col); });
+  });
+})();
+</script>
+</body>
+</html>

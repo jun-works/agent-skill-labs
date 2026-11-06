@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>진료 예약 | 골목동물병원</title>
+<meta name="description" content="골목동물병원 진료 예약 페이지입니다. 날짜와 시간을 골라 신청하면 병원에서 전화로 확정해 드립니다.">
+<meta name="theme-color" content="#15523f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2315523f'/%3E%3Cg fill='%23ffd95a'%3E%3Cellipse cx='16' cy='20.5' rx='6.5' ry='5.5'/%3E%3Ccircle cx='8.5' cy='14' r='2.6'/%3E%3Ccircle cx='13' cy='9.5' r='2.6'/%3E%3Ccircle cx='19' cy='9.5' r='2.6'/%3E%3Ccircle cx='23.5' cy='14' r='2.6'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root {
+    color-scheme: light;
+    --sign: #15523f;
+    --sign-deep: #0f3f30;
+    --green: #17634b;
+    --green-tint: #e3efe6;
+    --butter: #ffd95a;
+    --butter-soft: #fff4c7;
+    --page: #f1f4ea;
+    --surface: #ffffff;
+    --ink: #1c2b25;
+    --ink-soft: #52625a;
+    --line: #d5dccf;
+    --line-strong: #8b988f;
+    --stamp: #c4372a;
+    --error: #b3261e;
+    --error-tint: #fdeeec;
+    --radius: 12px;
+    --font-sign: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: 24px; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  h1, h2, h3, p, ul, dl, dd, fieldset, legend { margin: 0; padding: 0; }
+  fieldset { border: 0; min-width: 0; }
+  ul { list-style: none; }
+  a { color: inherit; }
+  button, input, textarea { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
+
+  .skip {
+    position: absolute; left: 12px; top: -60px;
+    background: var(--butter); color: var(--ink);
+    padding: 10px 16px; border-radius: 8px; font-weight: 700; z-index: 10;
+  }
+  .skip:focus { top: 12px; }
+
+  .wrap { width: min(1080px, 100% - 40px); margin-inline: auto; }
+
+  /* 간판 */
+  .sign { background: var(--sign); color: #fff; }
+  .sign :focus-visible { outline-color: var(--butter); }
+  .sign-top {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding-block: 18px;
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--font-sign); font-size: 1.5rem; line-height: 1.1;
+    color: var(--butter); text-decoration: none;
+  }
+  .brand svg { width: 30px; height: 30px; flex: none; }
+  .open-now {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: .9375rem; color: #e4f0e8; text-align: right;
+  }
+  .open-now::before {
+    content: ""; width: 9px; height: 9px; border-radius: 50%; flex: none;
+    background: #a9b8ae;
+  }
+  .open-now.is-open::before { background: var(--butter); }
+
+  .sign-main {
+    display: grid; gap: 28px;
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 18px 40px;
+  }
+  .sign-main h1 {
+    font-family: var(--font-sign); font-weight: 400;
+    font-size: clamp(2.5rem, 7vw, 3.75rem); line-height: 1.1;
+    color: #fff;
+  }
+  .lead { margin-top: 12px; font-size: 1.0625rem; color: #e4f0e8; max-width: 26em; }
+
+  .urgent {
+    background: var(--sign-deep);
+    border-left: 5px solid var(--butter);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 18px 20px;
+  }
+  .urgent h2 { font-size: 1.0625rem; font-weight: 700; color: var(--butter); }
+  .urgent p { margin-top: 4px; font-size: .9375rem; color: #e4f0e8; }
+  .urgent-call {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; margin-top: 12px; padding: 8px 16px;
+    background: var(--butter); color: var(--ink);
+    border-radius: 8px; font-weight: 700; text-decoration: none;
+  }
+  .urgent-call:hover { background: #ffe585; }
+
+  /* 본문 배치 */
+  .layout {
+    display: grid; gap: 28px;
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 28px 48px;
+  }
+  .sheet {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+  }
+  .step { padding: 28px 22px; }
+  .step + .step { border-top: 1px solid var(--line); }
+  .step-title {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 1.25rem; font-weight: 700; line-height: 1.3;
+    margin-bottom: 20px;
+  }
+  .step-num {
+    display: grid; place-items: center; flex: none;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--butter); color: var(--ink);
+    font-family: var(--font-sign); font-size: 1.0625rem; font-weight: 400; line-height: 1;
+  }
+
+  /* 입력 */
+  .field + .field, .field + fieldset, fieldset + .field, fieldset + fieldset { margin-top: 22px; }
+  .row { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); }
+  .row > * { margin-top: 0 !important; }
+  .row + .field, .row + fieldset, fieldset + .row, .field + .row { margin-top: 22px; }
+
+  label.lbl, legend.lbl {
+    display: block; font-weight: 600; margin-bottom: 8px;
+  }
+  .opt { font-weight: 400; color: var(--ink-soft); font-size: .9375rem; margin-left: 4px; }
+  .req { color: var(--error); margin-left: 3px; }
+  .hint { margin-top: 6px; font-size: .9375rem; color: var(--ink-soft); }
+
+  input[type="text"], input[type="tel"], textarea {
+    display: block; width: 100%;
+    min-height: 48px; padding: 11px 14px;
+    background: #fff;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    font-size: 1rem;
+  }
+  textarea { min-height: 112px; resize: vertical; line-height: 1.55; }
+  input::placeholder, textarea::placeholder { color: #66746c; opacity: 1; }
+  input[type="text"]:hover, input[type="tel"]:hover, textarea:hover { border-color: var(--ink-soft); }
+  input[type="text"]:focus-visible, input[type="tel"]:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--green); outline-offset: 0; border-color: var(--green); border-radius: 10px;
+  }
+  [aria-invalid="true"]:is(input, textarea) { border-color: var(--error); border-width: 2px; padding: 10px 13px; }
+
+  .err {
+    display: flex; gap: 6px;
+    margin-top: 8px; color: var(--error); font-size: .9375rem; font-weight: 600;
+  }
+  .err::before { content: "!"; display: grid; place-items: center; flex: none; width: 18px; height: 18px; margin-top: 3px; border-radius: 50%; background: var(--error); color: #fff; font-size: .75rem; line-height: 1; }
+
+  /* 고르는 버튼 공통 */
+  .pick { position: relative; display: block; }
+  .pick input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .pick input:disabled { cursor: not-allowed; }
+  .pick-face {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 48px; height: 100%; padding: 8px 12px;
+    background: #fff;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    text-align: center; font-weight: 500; line-height: 1.3;
+    transition: background-color .12s, border-color .12s, color .12s;
+  }
+  .pick input:hover:not(:disabled) + .pick-face { background: var(--green-tint); border-color: var(--green); }
+  .pick input:checked + .pick-face { background: var(--green); border-color: var(--green); color: #fff; font-weight: 700; }
+  .pick input:focus-visible + .pick-face { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .pick input:disabled + .pick-face { background: #eef0ea; border-color: #e0e4db; color: #6d7a72; }
+
+  .picks { display: grid; gap: 8px; }
+  .picks-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .picks-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .picks-svc { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .species-face { flex-direction: column; gap: 4px; min-height: 84px; }
+  .species-face svg { width: 38px; height: 38px; }
+
+  .svc-face { flex-direction: column; align-items: flex-start; gap: 0; padding: 10px 14px; min-height: 68px; justify-content: center; text-align: left; }
+  .svc-face small { font-size: .875rem; font-weight: 400; color: var(--ink-soft); }
+  .pick input:checked + .svc-face small { color: #e4f0e8; }
+
+  /* 날짜 */
+  .dates { display: grid; gap: 6px; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .date-face { flex-direction: column; gap: 0; min-height: 70px; padding: 6px 2px; }
+  .date-wd { font-size: .8125rem; font-weight: 500; }
+  .date-num { font-size: 1.1875rem; font-weight: 700; line-height: 1.2; }
+  .date-note { font-size: .75rem; font-weight: 500; line-height: 1.3; min-height: 1.3em; white-space: nowrap; }
+
+  /* 시간 */
+  .slot-group + .slot-group { margin-top: 16px; }
+  .slot-head { font-size: .9375rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 8px; }
+  .slots { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+  .slots .pick-face { min-height: 44px; padding: 6px 4px; font-variant-numeric: tabular-nums; }
+  .slot-empty {
+    padding: 16px; border: 1px dashed var(--line-strong); border-radius: 10px;
+    color: var(--ink-soft); text-align: center;
+  }
+  .notice {
+    margin-bottom: 12px; padding: 10px 14px; border-radius: 10px;
+    background: var(--butter-soft); font-size: .9375rem;
+  }
+
+  /* 동의 */
+  .consent-box { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; font-weight: 600; }
+  .consent-box input {
+    flex: none; width: 24px; height: 24px; margin: 1px 0 0;
+    accent-color: var(--green); cursor: pointer;
+  }
+  .consent-more { margin-top: 10px; margin-left: 36px; font-size: .9375rem; color: var(--ink-soft); }
+  .consent-more summary { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; min-height: 28px; }
+  .consent-more dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin-top: 8px; }
+  .consent-more dt { font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+  /* 접수표 */
+  .ticket-col { position: relative; padding-top: 62px; }
+  .peek { position: absolute; left: 22px; top: 0; width: 170px; height: 70px; pointer-events: none; z-index: 1; }
+  .ticket {
+    position: relative; z-index: 2;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px;
+  }
+  .ticket h2 { font-family: var(--font-sign); font-weight: 400; font-size: 1.5rem; line-height: 1.2; }
+  .ticket-sub { font-size: .9375rem; color: var(--ink-soft); margin-top: 2px; }
+  .ticket-rows { margin-top: 16px; }
+  .ticket-rows > div {
+    display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px;
+    padding-block: 9px; border-top: 1px dashed var(--line-strong);
+  }
+  .ticket-rows dt { color: var(--ink-soft); font-size: .9375rem; }
+  .ticket-rows dd { font-weight: 600; overflow-wrap: anywhere; }
+  .ticket-rows dd.is-empty { font-weight: 400; color: #66746c; }
+  .submit {
+    display: block; width: 100%; min-height: 54px; margin-top: 12px;
+    background: var(--green); color: #fff;
+    border: 0; border-radius: 10px;
+    font-size: 1.0625rem; font-weight: 700; cursor: pointer;
+    transition: background-color .12s;
+  }
+  .submit:hover { background: var(--sign-deep); }
+  .submit[aria-busy="true"] { background: var(--ink-soft); cursor: progress; }
+  .ticket-note { margin-top: 10px; font-size: .9375rem; color: var(--ink-soft); }
+  .form-alert {
+    margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+    background: var(--error-tint); color: var(--error); font-size: .9375rem; font-weight: 600;
+  }
+  .form-alert a { font-weight: 700; }
+
+  /* 완료 화면 */
+  .done { padding-block: 72px 56px; }
+  .done-card { position: relative; max-width: 500px; margin-inline: auto; }
+  .done-card .peek { left: 26px; top: -62px; }
+  .done-title:focus { outline: none; }
+  main:focus { outline: none; }
+  .done-title { font-family: var(--font-sign); font-weight: 400; font-size: 1.75rem; line-height: 1.25; }
+  .done-text { margin-top: 8px; }
+  .stamp {
+    position: absolute; right: 18px; top: 14px; z-index: 3;
+    display: grid; place-items: center;
+    width: 76px; height: 76px; border-radius: 50%;
+    border: 3px solid var(--stamp); color: var(--stamp);
+    font-family: var(--font-sign); font-size: 1.375rem; line-height: 1;
+    background: rgba(255,255,255,.75);
+    transform: rotate(-12deg);
+    animation: stamp .32s cubic-bezier(.2, 1.4, .4, 1) both .12s;
+  }
+  @keyframes stamp {
+    from { opacity: 0; transform: rotate(-12deg) scale(1.9); }
+    to   { opacity: 1; transform: rotate(-12deg) scale(1); }
+  }
+  .done-card .done-title { padding-right: 84px; }
+  .demo-note {
+    margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+    background: var(--butter-soft); font-size: .9375rem;
+  }
+  .again {
+    display: block; width: 100%; min-height: 48px; margin-top: 16px;
+    background: #fff; color: var(--green);
+    border: 2px solid var(--green); border-radius: 10px;
+    font-weight: 700; cursor: pointer;
+  }
+  .again:hover { background: var(--green-tint); }
+
+  /* 병원 안내 */
+  .info { background: var(--surface); border-top: 1px solid var(--line); }
+  .info-grid { display: grid; gap: 32px; grid-template-columns: minmax(0, 1fr); padding-block: 40px; }
+  .info h2 { font-size: 1.125rem; font-weight: 700; margin-bottom: 10px; }
+  .hours { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .hours th, .hours td { padding: 7px 0; border-top: 1px solid var(--line); text-align: left; font-weight: 400; }
+  .hours th { width: 5.5em; color: var(--ink-soft); }
+  .bring li { position: relative; padding-left: 16px; }
+  .bring li + li { margin-top: 6px; }
+  .bring li::before { content: ""; position: absolute; left: 0; top: .65em; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .place p + p { margin-top: 4px; }
+  .place a { font-weight: 700; }
+  .foot { background: var(--sign); color: #e4f0e8; font-size: .9375rem; padding-block: 18px; }
+
+  @media (min-width: 560px) {
+    .row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .picks-svc { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .step { padding: 32px 30px; }
+  }
+
+  @media (min-width: 720px) {
+    .sign-main { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); align-items: end; }
+    .info-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 920px) {
+    .layout { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; gap: 28px; padding-top: 0; }
+    .sheet { margin-top: 32px; }
+    .ticket-col { position: sticky; top: 0; padding-top: 94px; padding-bottom: 16px; }
+    .ticket-col .peek { top: 32px; }
+  }
+
+  @media (max-width: 379px) {
+    .wrap { width: calc(100% - 24px); }
+    .step { padding: 24px 14px; }
+    .dates { gap: 4px; }
+    .brand { font-size: 1.3125rem; }
+    .open-now { font-size: .875rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#booking">예약 입력으로 건너뛰기</a>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-dog" viewBox="0 0 48 48">
+    <path d="M12 12c-5-1-9 3-9 9 0 5 2 10 6 10 3 0 4-3 4-6z" fill="#8f5b35"/>
+    <path d="M36 12c5-1 9 3 9 9 0 5-2 10-6 10-3 0-4-3-4-6z" fill="#8f5b35"/>
+    <path d="M24 8c9 0 14 6 14 15 0 11-6 18-14 18S10 34 10 23C10 14 15 8 24 8z" fill="#d49a63"/>
+    <ellipse cx="24" cy="31" rx="8" ry="7" fill="#f6e3cc"/>
+    <circle cx="18" cy="22" r="2.4" fill="#1c2b25"/>
+    <circle cx="30" cy="22" r="2.4" fill="#1c2b25"/>
+    <ellipse cx="24" cy="28" rx="3" ry="2.2" fill="#1c2b25"/>
+    <path d="M24 30v3m-3.2 1c1 1 2.2 1 3.2-1 1 2 2.200 2 3.200 1" fill="none" stroke="#1c2b25" stroke-width="1.300" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-cat" viewBox="0 0 48 48">
+    <path d="M9 24 8 6c0-1 1-1.500 2-1l11 7z" fill="#e8983a"/>
+    <path d="M39 24l1-18c0-1-1-1.500-2-1L27 12z" fill="#e8983a"/>
+    <ellipse cx="24" cy="26" rx="17" ry="15" fill="#f4b45c"/>
+    <path d="M24 11.500c-1.800 0-2.600 1-2.600 2.200v4c0 1 1.200 1.600 2.600 1.600s2.600-.6 2.600-1.600v-4c0-1.200-.8-2.200-2.600-2.200z" fill="#e8983a"/>
+    <circle cx="17" cy="25" r="2.400" fill="#1c2b25"/>
+    <circle cx="31" cy="25" r="2.400" fill="#1c2b25"/>
+    <path d="M22.200 30h3.600L24 32z" fill="#c4372a"/>
+    <path d="M24 32c0 2-2.800 2.800-4 1.200M24 32c0 2 2.800 2.800 4 1.200" fill="none" stroke="#1c2b25" stroke-width="1.300" stroke-linecap="round"/>
+    <path d="M12 29 4 28m8 4-7 2m31-5 8-1m-8 4 7 2" stroke="#1c2b25" stroke-width="1.100" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-rabbit" viewBox="0 0 48 48">
+    <path d="M17 22C13 15 13 3 17.500 3S22 14 22 21z" fill="#c9cfc6"/>
+    <path d="M31 22c4-7 4-19-.500-19S26 14 26 21z" fill="#c9cfc6"/>
+    <ellipse cx="24" cy="30" rx="15" ry="14" fill="#e6e9e2"/>
+    <circle cx="18" cy="28" r="2.300" fill="#1c2b25"/>
+    <circle cx="30" cy="28" r="2.300" fill="#1c2b25"/>
+    <path d="M22.300 33h3.400L24 35z" fill="#c4372a"/>
+    <path d="M24 35v3" stroke="#1c2b25" stroke-width="1.300" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-paw" viewBox="0 0 32 32">
+    <g fill="currentColor">
+      <ellipse cx="16" cy="21" rx="7" ry="6"/>
+      <circle cx="7.500" cy="14" r="2.900"/>
+      <circle cx="12.500" cy="8.500" r="2.900"/>
+      <circle cx="19.500" cy="8.500" r="2.900"/>
+      <circle cx="24.500" cy="14" r="2.900"/>
+    </g>
+  </symbol>
+  <symbol id="i-peek" viewBox="0 0 170 70">
+    <use href="#i-dog" x="4" y="2" width="84" height="84"/>
+    <use href="#i-cat" x="84" y="8" width="78" height="78"/>
+  </symbol>
+</svg>
+
+<header class="sign" id="top">
+  <div class="wrap">
+    <div class="sign-top">
+      <a class="brand" href="#top">
+        <svg aria-hidden="true"><use href="#i-paw"/></svg>
+        골목동물병원
+      </a>
+      <span class="open-now" id="openNow"></span>
+    </div>
+    <div class="sign-main">
+      <div>
+        <h1>진료 예약</h1>
+        <p class="lead">날짜와 시간을 골라 신청해 주세요. 병원에서 전화를 드려 예약을 확정합니다.</p>
+      </div>
+      <aside class="urgent" aria-labelledby="urgentTitle">
+        <h2 id="urgentTitle">지금 많이 위급한가요?</h2>
+        <p>호흡 곤란, 경련, 심한 출혈, 이물 삼킴은 예약하지 말고 바로 전화 주세요. 진료 시간이 아니면 가까운 24시 동물병원으로 가 주세요.</p>
+        <a class="urgent-call" href="tel:02-000-0000">02-000-0000 전화하기</a>
+      </aside>
+    </div>
+  </div>
+</header>
+
+<main id="booking" class="wrap" tabindex="-1">
+  <div class="layout" id="bookingView">
+    <form class="sheet" id="form" novalidate aria-label="진료 예약 신청서">
+
+      <section class="step" aria-labelledby="s1">
+        <h2 class="step-title" id="s1"><span class="step-num" aria-hidden="true">1</span>어떤 아이인가요?</h2>
+
+        <fieldset id="group-species" role="radiogroup" aria-required="true" aria-labelledby="l-species">
+          <legend class="lbl" id="l-species">동물 종류<span class="req" aria-hidden="true">*</span></legend>
+          <div class="picks picks-3">
+            <label class="pick"><input type="radio" name="species" value="강아지"><span class="pick-face species-face"><svg aria-hidden="true"><use href="#i-dog"/></svg>강아지</span></label>
+            <label class="pick"><input type="radio" name="species" value="고양이"><span class="pick-face species-face"><svg aria-hidden="true"><use href="#i-cat"/></svg>고양이</span></label>
+            <label class="pick"><input type="radio" name="species" value="기타"><span class="pick-face species-face"><svg aria-hidden="true"><use href="#i-rabbit"/></svg>그 밖의 동물</span></label>
+          </div>
+          <p class="err" id="err-species" hidden></p>
+        </fieldset>
+
+        <div class="field" id="otherWrap" hidden>
+          <label class="lbl" for="speciesOther">어떤 동물인가요?<span class="req" aria-hidden="true">*</span></label>
+          <input type="text" id="speciesOther" name="speciesOther" maxlength="30" placeholder="예: 토끼, 햄스터, 앵무새" aria-describedby="err-speciesOther">
+          <p class="err" id="err-speciesOther" hidden></p>
+        </div>
+
+        <div class="row" style="margin-top:22px">
+          <div class="field">
+            <label class="lbl" for="petName">아이 이름<span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="petName" name="petName" maxlength="30" required autocomplete="off" aria-describedby="err-petName">
+            <p class="err" id="err-petName" hidden></p>
+          </div>
+          <div class="field">
+            <label class="lbl" for="petAge">나이<span class="opt">(선택)</span></label>
+            <input type="text" id="petAge" name="petAge" maxlength="20" autocomplete="off" placeholder="예: 3살, 5개월">
+          </div>
+        </div>
+
+        <fieldset id="group-visit" role="radiogroup" aria-required="true" aria-labelledby="l-visit" style="margin-top:22px">
+          <legend class="lbl" id="l-visit">우리 병원에 와 본 적이 있나요?<span class="req" aria-hidden="true">*</span></legend>
+          <div class="picks picks-2">
+            <label class="pick"><input type="radio" name="visit" value="초진"><span class="pick-face">처음이에요</span></label>
+            <label class="pick"><input type="radio" name="visit" value="재진"><span class="pick-face">와 봤어요</span></label>
+          </div>
+          <p class="err" id="err-visit" hidden></p>
+        </fieldset>
+      </section>
+
+      <section class="step" aria-labelledby="s2">
+        <h2 class="step-title" id="s2"><span class="step-num" aria-hidden="true">2</span>어떤 진료가 필요한가요?</h2>
+
+        <fieldset id="group-service" role="radiogroup" aria-required="true" aria-labelledby="l-service">
+          <legend class="lbl" id="l-service">진료 항목<span class="req" aria-hidden="true">*</span></legend>
+          <div class="picks picks-svc">
+            <label class="pick"><input type="radio" name="service" value="일반 진료"><span class="pick-face svc-face">일반 진료<small>아프거나 기운이 없어요</small></span></label>
+            <label class="pick"><input type="radio" name="service" value="예방접종"><span class="pick-face svc-face">예방접종<small>종합백신, 광견병 등</small></span></label>
+            <label class="pick"><input type="radio" name="service" value="건강검진"><span class="pick-face svc-face">건강검진<small>혈액검사, 영상검사</small></span></label>
+            <label class="pick"><input type="radio" name="service" value="피부·귀"><span class="pick-face svc-face">피부·귀<small>가려움, 귓병, 탈모</small></span></label>
+            <label class="pick"><input type="radio" name="service" value="치과"><span class="pick-face svc-face">치과<small>스케일링, 구취</small></span></label>
+            <label class="pick"><input type="radio" name="service" value="수술 상담"><span class="pick-face svc-face">수술 상담<small>중성화, 슬개골 등</small></span></label>
+          </div>
+          <p class="err" id="err-service" hidden></p>
+        </fieldset>
+
+        <div class="field" style="margin-top:22px">
+          <label class="lbl" for="memo">증상이나 전할 말<span class="opt">(선택)</span></label>
+          <textarea id="memo" name="memo" maxlength="300" placeholder="예: 어제부터 밥을 안 먹고 두 번 토했어요." aria-describedby="memoCount"></textarea>
+          <p class="hint" id="memoCount">0 / 300자</p>
+        </div>
+      </section>
+
+      <section class="step" aria-labelledby="s3">
+        <h2 class="step-title" id="s3"><span class="step-num" aria-hidden="true">3</span>언제 오실 수 있나요?</h2>
+
+        <noscript><p class="notice">이 브라우저에서는 날짜를 고를 수 없습니다. <a href="tel:02-000-0000">02-000-0000</a> 번호로 전화해 예약해 주세요.</p></noscript>
+
+        <fieldset id="group-date" role="radiogroup" aria-required="true" aria-labelledby="l-date">
+          <legend class="lbl" id="l-date">날짜<span class="req" aria-hidden="true">*</span></legend>
+          <div class="dates" id="dates"></div>
+          <p class="hint">오늘부터 2주 안의 날짜를 고를 수 있어요. 그 뒤로는 전화로 예약해 주세요.</p>
+          <p class="err" id="err-date" hidden></p>
+        </fieldset>
+
+        <fieldset id="group-time" role="radiogroup" aria-required="true" aria-labelledby="l-time" style="margin-top:22px">
+          <legend class="lbl" id="l-time">시간<span class="req" aria-hidden="true">*</span></legend>
+          <p class="notice" id="timeNotice" role="status" hidden></p>
+          <div id="slots"><p class="slot-empty">날짜를 먼저 골라 주세요.</p></div>
+          <p class="err" id="err-time" hidden></p>
+        </fieldset>
+      </section>
+
+      <section class="step" aria-labelledby="s4">
+        <h2 class="step-title" id="s4"><span class="step-num" aria-hidden="true">4</span>보호자 연락처를 알려 주세요</h2>
+
+        <div class="row">
+          <div class="field">
+            <label class="lbl" for="ownerName">보호자 이름<span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="ownerName" name="ownerName" maxlength="30" required autocomplete="name" aria-describedby="err-ownerName">
+            <p class="err" id="err-ownerName" hidden></p>
+          </div>
+          <div class="field">
+            <label class="lbl" for="phone">휴대폰 번호<span class="req" aria-hidden="true">*</span></label>
+            <input type="tel" id="phone" name="phone" maxlength="20" required inputmode="tel" autocomplete="tel" placeholder="010-1234-5678" aria-describedby="phoneHint err-phone">
+            <p class="hint" id="phoneHint">이 번호로 확인 전화를 드려요.</p>
+            <p class="err" id="err-phone" hidden></p>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:24px">
+          <label class="consent-box">
+            <input type="checkbox" id="consent" name="consent" required aria-describedby="err-consent">
+            <span>개인정보 수집·이용에 동의합니다.<span class="req" aria-hidden="true">*</span></span>
+          </label>
+          <p class="err" id="err-consent" hidden></p>
+          <details class="consent-more">
+            <summary>자세히 보기</summary>
+            <dl>
+              <dt>수집 항목</dt><dd>보호자 이름, 휴대폰 번호, 반려동물 정보, 증상 내용</dd>
+              <dt>이용 목적</dt><dd>진료 예약 확인과 안내</dd>
+              <dt>보유 기간</dt><dd>예약일로부터 1년</dd>
+              <dt>동의 거부</dt><dd>거부할 수 있으며, 이 경우 온라인 예약 대신 전화로 예약해 주세요.</dd>
+            </dl>
+          </details>
+        </div>
+      </section>
+    </form>
+
+    <div class="ticket-col">
+      <svg class="peek" aria-hidden="true"><use href="#i-peek"/></svg>
+      <aside class="ticket" aria-labelledby="ticketTitle">
+        <h2 id="ticketTitle">진료 접수표</h2>
+        <p class="ticket-sub">입력한 내용이 여기에 적혀요.</p>
+        <dl class="ticket-rows">
+          <div><dt>아이</dt><dd id="t-pet" class="is-empty">아직 없음</dd></div>
+          <div><dt>진료</dt><dd id="t-service" class="is-empty">아직 없음</dd></div>
+          <div><dt>날짜</dt><dd id="t-date" class="is-empty">아직 없음</dd></div>
+          <div><dt>시간</dt><dd id="t-time" class="is-empty">아직 없음</dd></div>
+          <div><dt>보호자</dt><dd id="t-owner" class="is-empty">아직 없음</dd></div>
+        </dl>
+        <div class="form-alert" id="formAlert" role="alert" hidden></div>
+        <button class="submit" id="submitBtn" type="submit" form="form">예약 신청하기</button>
+        <p class="ticket-note">신청만으로 확정되지 않아요. 병원의 확인 전화를 받으면 확정됩니다.</p>
+      </aside>
+    </div>
+  </div>
+
+  <div class="done" id="doneView" hidden>
+    <div class="done-card">
+      <svg class="peek" aria-hidden="true"><use href="#i-peek"/></svg>
+      <div class="ticket">
+        <span class="stamp" aria-hidden="true">접수</span>
+        <h2 class="done-title" id="doneTitle" tabindex="-1">예약 신청을 받았어요</h2>
+        <p class="done-text" id="doneText"></p>
+        <dl class="ticket-rows">
+          <div><dt>아이</dt><dd id="d-pet"></dd></div>
+          <div><dt>진료</dt><dd id="d-service"></dd></div>
+          <div><dt>날짜</dt><dd id="d-date"></dd></div>
+          <div><dt>시간</dt><dd id="d-time"></dd></div>
+          <div><dt>보호자</dt><dd id="d-owner"></dd></div>
+        </dl>
+        <p class="demo-note" id="demoNote" hidden><strong>미리보기 상태입니다.</strong> 아직 서버와 연결되지 않아 이 신청은 병원에 전달되지 않았습니다.</p>
+        <button class="again" id="againBtn" type="button">다른 예약 신청하기</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<section class="info" aria-label="병원 안내">
+  <div class="wrap info-grid">
+    <div>
+      <h2>진료 시간</h2>
+      <table class="hours">
+        <tbody>
+          <tr><th scope="row">월–금</th><td>오전 9:00 – 오후 7:00</td></tr>
+          <tr><th scope="row">토요일</th><td>오전 9:00 – 오후 3:00</td></tr>
+          <tr><th scope="row">점심시간</th><td>오후 1:00 – 2:00 (평일)</td></tr>
+          <tr><th scope="row">휴진</th><td>일요일, 공휴일</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h2>오실 때 챙겨 주세요</h2>
+      <ul class="bring">
+        <li>예방접종 수첩이나 이전 진료 기록</li>
+        <li>드시는 약이 있다면 약 봉투</li>
+        <li>강아지는 목줄이나 이동장</li>
+        <li>고양이와 작은 동물은 이동장</li>
+      </ul>
+    </div>
+    <div class="place">
+      <h2>찾아오는 길</h2>
+      <p>서울시 OO구 OO로 00, 1층</p>
+      <p>전화 <a href="tel:02-000-0000">02-000-0000</a></p>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">골목동물병원</div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- 병원에 맞게 바꾸는 값 ---------- */
+  var CONFIG = {
+    // 예약 데이터를 JSON으로 POST 받을 주소. 비어 있으면 미리보기로 동작하고 전송하지 않습니다.
+    endpoint: '',
+    phone: '02-000-0000',
+    bookableDays: 14,
+    slotMinutes: 30,
+    // 오늘 예약은 지금부터 이 시간(분) 뒤 슬롯부터 받습니다.
+    leadMinutes: 30,
+    // 요일: 0=일 ... 6=토. open/close와 점심은 'HH:MM'
+    hours: {
+      0: null,
+      1: { open: '09:00', close: '19:00', lunch: ['13:00', '14:00'] },
+      2: { open: '09:00', close: '19:00', lunch: ['13:00', '14:00'] },
+      3: { open: '09:00', close: '19:00', lunch: ['13:00', '14:00'] },
+      4: { open: '09:00', close: '19:00', lunch: ['13:00', '14:00'] },
+      5: { open: '09:00', close: '19:00', lunch: ['13:00', '14:00'] },
+      6: { open: '09:00', close: '15:00', lunch: null }
+    },
+    // 해마다 같은 날짜의 공휴일 (MM-DD)
+    fixedHolidays: ['01-01', '03-01', '05-05', '06-06', '08-15', '10-03', '10-09', '12-25'],
+    // 설·추석, 대체공휴일, 임시 휴진 등 (YYYY-MM-DD). 매년 직접 추가합니다.
+    closedDates: []
+  };
+  /* ------------------------------------------ */
+
+  var WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+  var $ = function (id) { return document.getElementById(id); };
+  var form = $('form');
+  var sending = false;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  // toISOString은 UTC 기준이라 한국 오전에 전날로 밀리므로 현지 날짜로 만듭니다.
+  function dateKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parseKey(key) { var p = key.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function toMin(hhmm) { var p = hhmm.split(':').map(Number); return p[0] * 60 + p[1]; }
+  function toHHMM(min) { return pad(Math.floor(min / 60)) + ':' + pad(min % 60); }
+  function nowMin(now) { return now.getHours() * 60 + now.getMinutes(); }
+
+  function formatTime(hhmm) {
+    var min = toMin(hhmm), h = Math.floor(min / 60), m = min % 60;
+    return (h < 12 ? '오전 ' : '오후 ') + (h % 12 === 0 ? 12 : h % 12) + ':' + pad(m);
+  }
+  function formatDate(key) {
+    var d = parseKey(key);
+    return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + WEEKDAYS[d.getDay()] + '요일';
+  }
+
+  function isHoliday(d) {
+    var key = dateKey(d);
+    return CONFIG.fixedHolidays.indexOf(key.slice(5)) !== -1 || CONFIG.closedDates.indexOf(key) !== -1;
+  }
+  function hoursFor(d) { return isHoliday(d) ? null : CONFIG.hours[d.getDay()]; }
+
+  function slotsFor(key) {
+    var d = parseKey(key), h = hoursFor(d), out = [];
+    if (!h) return out;
+    var now = new Date();
+    var earliest = dateKey(now) === key ? nowMin(now) + CONFIG.leadMinutes : -1;
+    for (var t = toMin(h.open); t < toMin(h.close); t += CONFIG.slotMinutes) {
+      if (h.lunch && t >= toMin(h.lunch[0]) && t < toMin(h.lunch[1])) continue;
+      out.push({ value: toHHMM(t), past: t < earliest });
+    }
+    return out;
+  }
+  function openSlots(key) { return slotsFor(key).filter(function (s) { return !s.past; }); }
+
+  function selected(name) {
+    var el = form.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : '';
+  }
+
+  /* ---------- 날짜·시간 ---------- */
+  function renderDates() {
+    var box = $('dates'), keep = selected('date'), today = new Date();
+    box.textContent = '';
+    for (var i = 0; i < CONFIG.bookableDays; i++) {
+      var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+      var key = dateKey(d);
+      var closed = !hoursFor(d);
+      var over = !closed && openSlots(key).length === 0;
+      var label = document.createElement('label');
+      label.className = 'pick';
+      var input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'date';
+      input.value = key;
+      input.disabled = closed || over;
+      input.checked = key === keep && !input.disabled;
+      input.setAttribute('aria-label', formatDate(key) + (closed ? ', 휴진' : over ? ', 오늘 예약 마감' : ''));
+      var face = document.createElement('span');
+      face.className = 'pick-face date-face';
+      var note = closed ? '휴진' : over ? '마감' : i === 0 ? '오늘' : (i === 1 ? '내일' : (d.getDate() === 1 ? (d.getMonth() + 1) + '월' : ''));
+      [['date-wd', WEEKDAYS[d.getDay()]], ['date-num', d.getDate()], ['date-note', note]].forEach(function (p) {
+        var s = document.createElement('span');
+        s.className = p[0];
+        s.textContent = p[1];
+        face.appendChild(s);
+      });
+      label.appendChild(input);
+      label.appendChild(face);
+      box.appendChild(label);
+    }
+  }
+
+  function renderSlots(announce) {
+    var key = selected('date'), box = $('slots'), keep = selected('time'), notice = $('timeNotice');
+    box.textContent = '';
+    notice.hidden = true;
+    notice.textContent = '';
+    if (!key) {
+      var empty = document.createElement('p');
+      empty.className = 'slot-empty';
+      empty.textContent = '날짜를 먼저 골라 주세요.';
+      box.appendChild(empty);
+      return;
+    }
+    var slots = slotsFor(key);
+    var stillOpen = slots.some(function (s) { return s.value === keep && !s.past; });
+    [['오전', function (s) { return toMin(s.value) < 720; }], ['오후', function (s) { return toMin(s.value) >= 720; }]].forEach(function (g) {
+      var list = slots.filter(g[1]);
+      if (!list.length) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'slot-group';
+      var head = document.createElement('p');
+      head.className = 'slot-head';
+      head.textContent = g[0];
+      var grid = document.createElement('div');
+      grid.className = 'slots';
+      list.forEach(function (s) {
+        var label = document.createElement('label');
+        label.className = 'pick';
+        var input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'time';
+        input.value = s.value;
+        input.disabled = s.past;
+        input.checked = stillOpen && s.value === keep;
+        input.setAttribute('aria-label', formatTime(s.value) + (s.past ? ', 지난 시간' : ''));
+        var face = document.createElement('span');
+        face.className = 'pick-face';
+        var m = toMin(s.value), h = Math.floor(m / 60);
+        face.textContent = (h % 12 === 0 ? 12 : h % 12) + ':' + pad(m % 60);
+        label.appendChild(input);
+        label.appendChild(face);
+        grid.appendChild(label);
+      });
+      wrap.appendChild(head);
+      wrap.appendChild(grid);
+      box.appendChild(wrap);
+    });
+    if (announce && keep && !stillOpen) {
+      notice.textContent = formatTime(keep) + ' 예약은 ' + formatDate(key) + '에 받을 수 없어요. 시간을 다시 골라 주세요.';
+      notice.hidden = false;
+    }
+  }
+
+  /* ---------- 지금 진료 중 ---------- */
+  function renderOpenNow() {
+    var el = $('openNow'), now = new Date(), h = hoursFor(now), m = nowMin(now);
+    var open = h && m >= toMin(h.open) && m < toMin(h.close);
+    var lunch = open && h.lunch && m >= toMin(h.lunch[0]) && m < toMin(h.lunch[1]);
+    el.classList.toggle('is-open', !!open && !lunch);
+    el.textContent = lunch ? formatTime(h.lunch[1]) + '까지 점심시간'
+      : open ? '진료 중 · ' + formatTime(h.close) + '까지'
+      : '진료 시간이 아니에요';
+  }
+
+  /* ---------- 접수표 ---------- */
+  function petText() {
+    var name = $('petName').value.trim(), sp = selected('species');
+    if (sp === '기타') sp = $('speciesOther').value.trim() || '그 밖의 동물';
+    var visit = selected('visit');
+    var bits = [sp, $('petAge').value.trim(), visit].filter(Boolean).join(', ');
+    return name && bits ? name + ' (' + bits + ')' : name || bits;
+  }
+  function ownerText() {
+    return [$('ownerName').value.trim(), $('phone').value.trim()].filter(Boolean).join(' · ');
+  }
+  function summary() {
+    var date = selected('date'), time = selected('time');
+    return {
+      pet: petText(),
+      service: selected('service'),
+      date: date ? formatDate(date) : '',
+      time: time ? formatTime(time) : '',
+      owner: ownerText()
+    };
+  }
+  function renderTicket() {
+    var s = summary();
+    Object.keys(s).forEach(function (k) {
+      var el = $('t-' + k);
+      el.textContent = s[k] || '아직 없음';
+      el.classList.toggle('is-empty', !s[k]);
+    });
+  }
+
+  /* ---------- 검증 ---------- */
+  // 자동 완성이 넣는 +82 10-... 형식도 국내 번호로 맞춥니다.
+  function digits(v) { return v.replace(/\D/g, '').replace(/^82(?=1)/, '0'); }
+  function formatPhone(v) {
+    var n = digits(v);
+    if (n.length === 11) return n.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3');
+    if (n.length === 10) return n.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
+    return v.trim();
+  }
+
+  var RULES = {
+    species: function () { return selected('species') ? '' : '동물 종류를 골라 주세요.'; },
+    speciesOther: function () {
+      return selected('species') === '기타' && !$('speciesOther').value.trim() ? '어떤 동물인지 적어 주세요.' : '';
+    },
+    petName: function () { return $('petName').value.trim() ? '' : '아이 이름을 적어 주세요.'; },
+    visit: function () { return selected('visit') ? '' : '처음인지 와 봤는지 골라 주세요.'; },
+    service: function () { return selected('service') ? '' : '진료 항목을 골라 주세요.'; },
+    date: function () { return selected('date') ? '' : '날짜를 골라 주세요.'; },
+    time: function () { return selected('time') ? '' : '시간을 골라 주세요.'; },
+    ownerName: function () { return $('ownerName').value.trim() ? '' : '보호자 이름을 적어 주세요.'; },
+    phone: function () {
+      var v = $('phone').value.trim();
+      if (!v) return '휴대폰 번호를 적어 주세요.';
+      return /^01[016789]\d{7,8}$/.test(digits(v)) ? '' : '휴대폰 번호를 다시 확인해 주세요. 예: 010-1234-5678';
+    },
+    consent: function () { return $('consent').checked ? '' : '예약하려면 개인정보 수집·이용에 동의해 주세요.'; }
+  };
+  var ORDER = ['species', 'speciesOther', 'petName', 'visit', 'service', 'date', 'time', 'ownerName', 'phone', 'consent'];
+
+  function setError(name, msg) {
+    var err = $('err-' + name);
+    err.textContent = msg;
+    err.hidden = !msg;
+    var target = $('group-' + name) || $(name);
+    if (msg) target.setAttribute('aria-invalid', 'true');
+    else target.removeAttribute('aria-invalid');
+    if ($('group-' + name)) {
+      if (msg) target.setAttribute('aria-describedby', 'err-' + name);
+      else target.removeAttribute('aria-describedby');
+    }
+  }
+  function check(name) {
+    var msg = RULES[name]();
+    setError(name, msg);
+    return msg;
+  }
+  // 이미 오류가 보이는 항목만 다시 검사해, 입력 도중에 새 오류를 띄우지 않습니다.
+  function recheck(name) {
+    if (!$('err-' + name).hidden) check(name);
+  }
+  function focusField(name) {
+    var group = $('group-' + name);
+    var el = group
+      ? (group.querySelector('input:checked:not(:disabled)') || group.querySelector('input:not(:disabled)'))
+      : $(name);
+    if (name === 'time' && !selected('date')) el = form.querySelector('input[name="date"]:not(:disabled)');
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    (group || el).scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+
+  /* ---------- 제출 ---------- */
+  function showAlert(node) {
+    var box = $('formAlert');
+    box.textContent = '';
+    box.appendChild(node);
+    box.hidden = false;
+  }
+  function hideAlert() { $('formAlert').hidden = true; }
+
+  function payload() {
+    return {
+      species: selected('species') === '기타' ? $('speciesOther').value.trim() : selected('species'),
+      petName: $('petName').value.trim(),
+      petAge: $('petAge').value.trim(),
+      visit: selected('visit'),
+      service: selected('service'),
+      memo: $('memo').value.trim(),
+      date: selected('date'),
+      time: selected('time'),
+      ownerName: $('ownerName').value.trim(),
+      phone: formatPhone($('phone').value),
+      consent: $('consent').checked
+    };
+  }
+
+  function showDone() {
+    var s = summary();
+    Object.keys(s).forEach(function (k) { $('d-' + k).textContent = s[k]; });
+    $('doneText').textContent = '진료 시간 안에 ' + $('phone').value.trim() + ' 번호로 확인 전화를 드릴게요. 전화를 받으시면 예약이 확정됩니다.';
+    $('demoNote').hidden = !!CONFIG.endpoint;
+    $('bookingView').hidden = true;
+    $('doneView').hidden = false;
+    window.scrollTo(0, 0);
+    $('doneTitle').focus({ preventScroll: true });
+    $('doneView').scrollIntoView({ block: 'start' });
+  }
+
+  function setSending(on) {
+    sending = on;
+    var btn = $('submitBtn');
+    btn.textContent = on ? '보내는 중…' : '예약 신청하기';
+    if (on) btn.setAttribute('aria-busy', 'true');
+    else btn.removeAttribute('aria-busy');
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (sending) return;
+    hideAlert();
+    $('phone').value = formatPhone($('phone').value);
+
+    // 페이지를 오래 열어 둔 사이 지나간 날짜·시간은 선택을 풀고 안내합니다.
+    renderDates();
+    renderSlots(true);
+    renderTicket();
+
+    var failed = ORDER.filter(function (name) { return !!check(name); });
+    if (failed.length) {
+      var msg = document.createElement('span');
+      msg.textContent = '확인이 필요한 항목이 ' + failed.length + '개 있어요.';
+      showAlert(msg);
+      focusField(failed[0]);
+      return;
+    }
+
+    if (!CONFIG.endpoint) { showDone(); return; }
+
+    setSending(true);
+    fetch(CONFIG.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload())
+    }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      setSending(false);
+      showDone();
+    }).catch(function () {
+      setSending(false);
+      var frag = document.createDocumentFragment();
+      frag.appendChild(document.createTextNode('신청을 보내지 못했어요. 입력한 내용은 그대로 있으니 다시 시도하거나 '));
+      var a = document.createElement('a');
+      a.href = 'tel:' + CONFIG.phone;
+      a.textContent = CONFIG.phone;
+      frag.appendChild(a);
+      frag.appendChild(document.createTextNode(' 번호로 전화해 주세요.'));
+      showAlert(frag);
+    });
+  });
+
+  /* ---------- 입력 이벤트 ---------- */
+  function syncOther() {
+    var isOther = selected('species') === '기타';
+    $('otherWrap').hidden = !isOther;
+    if (!isOther) setError('speciesOther', '');
+  }
+
+  form.addEventListener('change', function (e) {
+    var name = e.target.name;
+    if (name === 'species') {
+      syncOther();
+      check('species');
+    }
+    if (name === 'date') {
+      renderSlots(true);
+      check('date');
+      recheck('time');
+    }
+    if (name === 'visit' || name === 'service' || name === 'time' || name === 'consent') check(name);
+    hideAlert();
+    renderTicket();
+  });
+
+  form.addEventListener('input', function (e) {
+    if (e.target.id === 'memo') {
+      $('memoCount').textContent = e.target.value.length + ' / 300자';
+    }
+    if (RULES[e.target.name]) recheck(e.target.name);
+    renderTicket();
+  });
+
+  // 입력 중 Enter로 긴 신청서가 실수로 제출되지 않게 막습니다.
+  form.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') e.preventDefault();
+  });
+
+  ['petName', 'speciesOther', 'ownerName', 'phone'].forEach(function (id) {
+    $(id).addEventListener('blur', function () {
+      if (id === 'phone') {
+        $('phone').value = formatPhone($('phone').value);
+        renderTicket();
+      }
+      if ($(id).value.trim()) check(id);
+    });
+  });
+
+  $('againBtn').addEventListener('click', function () {
+    // 같은 보호자가 다른 아이를 예약하는 경우가 많아 연락처는 남겨 둡니다.
+    var owner = $('ownerName').value, phone = $('phone').value;
+    form.reset();
+    $('ownerName').value = owner;
+    $('phone').value = phone;
+    $('memoCount').textContent = '0 / 300자';
+    ORDER.forEach(function (n) { setError(n, ''); });
+    syncOther();
+    renderDates();
+    renderSlots(false);
+    renderTicket();
+    hideAlert();
+    $('doneView').hidden = true;
+    $('bookingView').hidden = false;
+    window.scrollTo(0, 0);
+    $('booking').focus({ preventScroll: true });
+  });
+
+  /* ---------- 시작 ---------- */
+  renderOpenNow();
+  setInterval(renderOpenNow, 60000);
+  renderDates();
+  renderSlots(false);
+  syncOther();
+  renderTicket();
+})();
+</script>
+</body>
+</html>

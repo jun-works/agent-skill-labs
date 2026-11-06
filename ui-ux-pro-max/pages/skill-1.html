@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>모아 — 새는 돈은 막고, 모이는 돈은 보이게 | 개인 가계부 앱</title>
+  <meta name="description" content="자동 분류, 예산 알림, 월간 리포트까지. 3초 만에 기록하고 한눈에 보는 개인 가계부 앱 모아.">
+  <meta name="theme-color" content="#0F172A">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ===== Design tokens (ui-ux-pro-max: Glassmorphism · Trust blue + profit green on dark) ===== */
+    :root {
+      color-scheme: dark;
+      --color-primary: #1E40AF;
+      --color-on-primary: #FFFFFF;
+      --color-secondary: #3B82F6;
+      --color-link: #60A5FA;              /* lighter blue for text on dark (≥4.5:1) */
+      --color-accent: #059669;
+      --color-accent-hover: #10B981;
+      --color-on-accent: #03140D;         /* dark ink on green: white fails 4.5:1 */
+      --color-background: #0F172A;
+      --color-foreground: #FFFFFF;
+      --color-card: #192134;
+      --color-muted: #101A34;
+      --color-muted-foreground: #A3B1C6;
+      --color-border: rgba(255,255,255,0.10);
+      --color-border-strong: rgba(255,255,255,0.20);
+      --color-destructive: #DC2626;
+      --color-warning: #F5B841;
+      --color-ring: #FFFFFF;
+
+      /* chart slots — dataviz reference palette, dark steps 1–4 (pre-validated, adjacent pairs) */
+      --series-1: #3987E5;
+      --series-2: #D95926;
+      --series-3: #199E70;
+      --series-4: #C98500;
+
+      --glass-bg: rgba(25,33,52,0.58);
+      --glass-bg-strong: rgba(25,33,52,0.82);
+      --glass-blur: blur(16px) saturate(140%);
+
+      /* spacious density scale */
+      --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+      --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px; --space-24: 96px;
+
+      --radius-sm: 10px; --radius-md: 16px; --radius-lg: 24px; --radius-xl: 32px;
+      --font-sans: "Noto Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      --ease-out: cubic-bezier(.22,1,.36,1);
+      --ease-back: cubic-bezier(.34,1.4,.64,1);
+    }
+
+    /* ===== Base ===== */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--color-foreground);
+      background: var(--color-background);
+      word-break: keep-all;          /* 한국어 어절 단위 줄바꿈 */
+      overflow-wrap: break-word;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    img, svg { display: block; }
+    a { color: var(--color-link); text-underline-offset: 3px; }
+    h1, h2, h3 { line-height: 1.25; margin: 0; text-wrap: balance; letter-spacing: -0.02em; }
+    p { margin: 0; text-wrap: pretty; }
+    .num { font-variant-numeric: tabular-nums; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+    :focus-visible { outline: 2px solid var(--color-ring); outline-offset: 3px; border-radius: 8px; }
+    .skip-link {
+      position: absolute; left: var(--space-4); top: -60px; z-index: 100;
+      background: var(--color-foreground); color: var(--color-background);
+      padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); font-weight: 700;
+      transition: top 150ms var(--ease-out);
+    }
+    .skip-link:focus { top: var(--space-4); }
+
+    .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 40px); }
+    .icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .icon-sm { width: 18px; height: 18px; }
+
+    /* ===== Background light sources ===== */
+    .backdrop { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .45; }
+    .blob-1 { width: 520px; height: 520px; background: var(--color-primary); top: -160px; left: -120px; }
+    .blob-2 { width: 420px; height: 420px; background: var(--color-accent); top: 30%; right: -160px; opacity: .28; }
+    .blob-3 { width: 480px; height: 480px; background: #312E81; bottom: -200px; left: 20%; opacity: .4; }
+
+    /* ===== Glass ===== */
+    .glass {
+      background: var(--glass-bg);
+      border: 1px solid var(--color-border);
+      -webkit-backdrop-filter: var(--glass-blur);
+      backdrop-filter: var(--glass-blur);
+      box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 20px 40px -20px rgba(0,0,0,.5);
+    }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      .glass { background: var(--glass-bg-strong); }
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+      min-height: 48px; padding: 0 var(--space-6);
+      border-radius: 999px; border: 1px solid transparent;
+      font: inherit; font-weight: 700; font-size: 16px; text-decoration: none; cursor: pointer;
+      transition: background-color 200ms var(--ease-out), border-color 200ms var(--ease-out), transform 150ms var(--ease-out), box-shadow 200ms var(--ease-out);
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-accent { background: var(--color-accent); color: var(--color-on-accent); box-shadow: 0 8px 24px -8px rgba(5,150,105,.6); }
+    .btn-accent:hover { background: var(--color-accent-hover); }
+    .btn-ghost { background: rgba(255,255,255,.04); color: var(--color-foreground); border-color: var(--color-border-strong); }
+    .btn-ghost:hover { background: rgba(255,255,255,.10); }
+    .btn-sm { min-height: 44px; padding: 0 var(--space-4); font-size: 15px; }
+    .btn .icon { transition: transform 200ms var(--ease-out); }
+    .btn:hover .icon-arrow { transform: translateX(3px); }
+
+    /* ===== Header ===== */
+    .site-header {
+      position: sticky; top: 0; z-index: 50;
+      border-width: 0 0 1px; border-radius: 0;
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: var(--space-4); }
+    .logo { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-foreground); text-decoration: none; font-weight: 900; font-size: 20px; min-height: 44px; }
+    .logo-mark { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, var(--color-secondary), var(--color-accent)); color: #fff; }
+    .logo-mark .icon { width: 20px; height: 20px; }
+    .nav-links { display: none; list-style: none; margin: 0; padding: 0; gap: var(--space-2); }
+    .nav-links a {
+      display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--space-3);
+      color: var(--color-muted-foreground); text-decoration: none; font-weight: 500; border-radius: var(--radius-sm);
+      transition: color 150ms var(--ease-out), background-color 150ms var(--ease-out);
+    }
+    .nav-links a:hover { color: var(--color-foreground); background: rgba(255,255,255,.06); }
+    .nav-actions { display: flex; align-items: center; gap: var(--space-2); }
+    .nav-actions .btn-accent { display: none; }
+    .menu-toggle {
+      display: inline-grid; place-items: center; width: 44px; height: 44px;
+      background: transparent; border: 1px solid var(--color-border-strong); border-radius: 12px;
+      color: var(--color-foreground); cursor: pointer;
+    }
+    .mobile-menu { display: none; padding: 0 0 var(--space-4); }
+    .mobile-menu.open { display: block; }
+    .mobile-menu ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+    .mobile-menu a:not(.btn) {
+      display: flex; align-items: center; min-height: 48px; padding: 0 var(--space-4);
+      color: var(--color-foreground); text-decoration: none; border-radius: var(--radius-sm); font-weight: 500;
+    }
+    .mobile-menu a:not(.btn):hover { background: rgba(255,255,255,.06); }
+    .mobile-menu .btn { width: 100%; margin-top: var(--space-2); }
+
+    /* ===== Sections ===== */
+    section { padding: var(--space-24) 0; scroll-margin-top: 68px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      font-size: 14px; font-weight: 700; color: #6EE7B7; letter-spacing: .02em;
+      padding: 6px 14px; border-radius: 999px; background: rgba(5,150,105,.14); border: 1px solid rgba(16,185,129,.3);
+    }
+    .section-head { max-width: 640px; margin: 0 auto var(--space-12); text-align: center; display: grid; gap: var(--space-4); justify-items: center; }
+    .section-head h2 { font-size: clamp(28px, 4.2vw, 42px); font-weight: 900; }
+    .section-head p { color: var(--color-muted-foreground); font-size: 18px; }
+
+    /* ===== Hero ===== */
+    .hero { padding: var(--space-16) 0 var(--space-24); }
+    .hero-grid { display: grid; gap: var(--space-16); align-items: center; }
+    .hero-copy { display: grid; gap: var(--space-6); justify-items: start; }
+    .hero h1 { font-size: clamp(36px, 6.4vw, 64px); font-weight: 900; }
+    .hero h1 .grad { background: linear-gradient(90deg, #93C5FD, #6EE7B7); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero-lead { font-size: clamp(17px, 2vw, 20px); color: var(--color-muted-foreground); max-width: 34em; }
+    .hero-ctas { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: var(--space-6); color: var(--color-muted-foreground); font-size: 15px; list-style: none; padding: 0; margin: 0; }
+    .hero-meta li { display: inline-flex; align-items: center; gap: var(--space-2); }
+    .hero-meta .icon { color: #6EE7B7; }
+
+    /* ===== Phone mockup ===== */
+    .mock-wrap { position: relative; display: grid; place-items: center; }
+    .phone {
+      width: min(340px, 100%); aspect-ratio: 340 / 690;
+      border-radius: 44px; padding: 14px;
+      background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.03));
+      border: 1px solid var(--color-border-strong);
+      box-shadow: 0 40px 80px -30px rgba(0,0,0,.7), 0 0 0 1px rgba(0,0,0,.4) inset;
+    }
+    .screen {
+      height: 100%; border-radius: 32px; overflow: hidden;
+      background: linear-gradient(180deg, #121B31, #0C1324);
+      padding: 18px 16px; display: flex; flex-direction: column; gap: 12px;
+      font-size: 13px;
+    }
+    .screen-top { display: flex; justify-content: space-between; align-items: center; color: var(--color-muted-foreground); font-size: 13px; }
+    .screen-top strong { color: var(--color-foreground); font-size: 15px; }
+    .card-m { border-radius: 18px; padding: 14px; background: rgba(255,255,255,.05); border: 1px solid var(--color-border); }
+    .hero-number .label { color: var(--color-muted-foreground); font-size: 13px; }
+    .hero-number .value { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.2; }
+    .hero-number .sub { color: var(--color-muted-foreground); font-size: 12px; margin-top: 2px; }
+
+    .donut-row { display: grid; grid-template-columns: 104px 1fr; gap: 12px; align-items: center; }
+    .donut { width: 104px; height: 104px; transform: rotate(-90deg); }
+    .donut circle { fill: none; stroke-width: 14; }
+    .donut .seg { transition: stroke-width 150ms var(--ease-out); cursor: default; }
+    .donut .seg:hover { stroke-width: 17; }
+    .donut-wrap { position: relative; }
+    .donut-center { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; line-height: 1.2; }
+    .donut-center b { font-size: 14px; }
+    .donut-center span { font-size: 11px; color: var(--color-muted-foreground); display: block; }
+    .legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .legend li { display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; font-size: 12px; color: var(--color-muted-foreground); }
+    .legend li b { color: var(--color-foreground); font-weight: 700; }
+    .swatch { width: 10px; height: 10px; border-radius: 3px; }
+
+    .meters { display: grid; gap: 10px; }
+    .meter-head { display: flex; justify-content: space-between; font-size: 12px; color: var(--color-muted-foreground); margin-bottom: 5px; }
+    .meter-head b { color: var(--color-foreground); font-weight: 500; }
+    .meter-head .warn { display: inline-flex; align-items: center; gap: 3px; color: var(--color-warning); font-weight: 700; }
+    .meter-head .warn .icon { width: 12px; height: 12px; }
+    .track { height: 8px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .fill { height: 100%; border-radius: 999px; background: var(--color-secondary); transform-origin: left; }
+    .fill.warning { background: var(--color-warning); }
+
+    .tx { display: grid; gap: 8px; }
+    .tx-item { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; }
+    .tx-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.07); color: var(--color-muted-foreground); }
+    .tx-ico .icon { width: 16px; height: 16px; }
+    .tx-item .t { font-size: 13px; line-height: 1.3; }
+    .tx-item .t small { display: block; color: var(--color-muted-foreground); font-size: 11px; }
+    .tx-item .amt { font-weight: 700; font-size: 13px; }
+    .tx-item .amt.in { color: #6EE7B7; }
+
+    .float-card {
+      position: absolute; border-radius: var(--radius-md); padding: 12px 14px;
+      display: none; align-items: center; gap: 10px; font-size: 14px; max-width: 230px;
+    }
+    .float-card .ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
+    .float-card small { display: block; color: var(--color-muted-foreground); font-size: 12px; }
+    .float-1 { top: 14%; left: -4%; }
+    .float-1 .ico { background: rgba(245,184,65,.16); color: var(--color-warning); }
+    .float-2 { bottom: 16%; right: -4%; }
+    .float-2 .ico { background: rgba(16,185,129,.16); color: #6EE7B7; }
+
+    /* ===== Trust strip ===== */
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); border-radius: var(--radius-lg); padding: var(--space-8); margin-top: calc(var(--space-12) * -1); }
+    .stat { text-align: center; display: grid; gap: var(--space-1); }
+    .stat b { font-size: clamp(26px, 3.4vw, 36px); font-weight: 900; }
+    .stat span { color: var(--color-muted-foreground); font-size: 15px; }
+
+    /* ===== Features ===== */
+    .features { display: grid; gap: var(--space-6); }
+    .feature { border-radius: var(--radius-lg); padding: var(--space-8); display: grid; gap: var(--space-3); align-content: start; transition: border-color 200ms var(--ease-out), transform 200ms var(--ease-out); }
+    .feature:hover { border-color: var(--color-border-strong); transform: translateY(-2px); }
+    .feature .ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: rgba(59,130,246,.16); color: #93C5FD; margin-bottom: var(--space-2); }
+    .feature:nth-child(3n+2) .ico { background: rgba(16,185,129,.14); color: #6EE7B7; }
+    .feature:nth-child(3n) .ico { background: rgba(167,139,250,.14); color: #C4B5FD; }
+    .feature h3 { font-size: 20px; font-weight: 700; }
+    .feature p { color: var(--color-muted-foreground); }
+
+    /* ===== Steps ===== */
+    .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-6); counter-reset: step; }
+    .step { border-radius: var(--radius-lg); padding: var(--space-8); display: grid; gap: var(--space-3); }
+    .step::before {
+      counter-increment: step; content: counter(step);
+      width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--color-primary); color: var(--color-on-primary); font-weight: 900;
+    }
+    .step h3 { font-size: 20px; }
+    .step p { color: var(--color-muted-foreground); }
+
+    /* ===== Simulator ===== */
+    .sim { border-radius: var(--radius-xl); padding: clamp(24px, 5vw, 56px); display: grid; gap: var(--space-12); align-items: center; }
+    .sim-copy { display: grid; gap: var(--space-4); }
+    .sim-copy h2 { font-size: clamp(26px, 3.6vw, 38px); font-weight: 900; }
+    .sim-copy p { color: var(--color-muted-foreground); font-size: 17px; }
+    .sim-panel { display: grid; gap: var(--space-6); }
+    .field label { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); font-weight: 700; margin-bottom: var(--space-3); }
+    .field label output { font-size: 22px; color: #6EE7B7; }
+    .field .hint { color: var(--color-muted-foreground); font-size: 14px; margin-top: var(--space-2); }
+    input[type="range"] {
+      width: 100%; height: 44px; background: transparent; cursor: pointer; margin: 0;
+      -webkit-appearance: none; appearance: none;
+    }
+    input[type="range"]::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--color-accent) var(--p, 20%), rgba(255,255,255,.14) var(--p, 20%)); }
+    input[type="range"]::-moz-range-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,.14); }
+    input[type="range"]::-moz-range-progress { height: 8px; border-radius: 999px; background: var(--color-accent); }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; margin-top: -9px; border-radius: 50%; background: #fff; border: 4px solid var(--color-accent); box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+    input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 4px solid var(--color-accent); }
+    input[type="range"]:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 4px; }
+    .results { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    .result { border-radius: var(--radius-md); padding: var(--space-6); background: rgba(255,255,255,.05); border: 1px solid var(--color-border); }
+    .result span { display: block; color: var(--color-muted-foreground); font-size: 14px; }
+    .result b { font-size: clamp(22px, 3vw, 30px); font-weight: 900; }
+    .result.big { background: rgba(5,150,105,.12); border-color: rgba(16,185,129,.35); }
+
+    /* ===== Compare table ===== */
+    .table-wrap { border-radius: var(--radius-lg); overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    caption { text-align: left; padding: var(--space-6) var(--space-6) 0; color: var(--color-muted-foreground); font-size: 14px; }
+    th, td { padding: var(--space-4) var(--space-6); text-align: center; border-bottom: 1px solid var(--color-border); }
+    th[scope="row"] { text-align: left; font-weight: 500; }
+    thead th { font-size: 15px; color: var(--color-muted-foreground); font-weight: 700; }
+    thead th.us { color: var(--color-foreground); }
+    td.us { background: rgba(59,130,246,.08); }
+    tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+    .yes, .no { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+    .yes { color: #6EE7B7; }
+    .no { color: var(--color-muted-foreground); }
+
+    /* ===== Testimonials ===== */
+    .quotes { display: grid; gap: var(--space-6); }
+    .quote { border-radius: var(--radius-lg); padding: var(--space-8); display: grid; gap: var(--space-4); margin: 0; }
+    .stars { display: flex; gap: 2px; color: var(--color-warning); }
+    .stars .icon { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+    .quote blockquote { margin: 0; font-size: 17px; }
+    .quote figcaption { display: flex; align-items: center; gap: var(--space-3); color: var(--color-muted-foreground); font-size: 14px; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; background: var(--color-primary); }
+    .quote figcaption b { color: var(--color-foreground); display: block; font-size: 15px; }
+
+    /* ===== Pricing ===== */
+    .plans { display: grid; gap: var(--space-6); max-width: 880px; margin: 0 auto; }
+    .plan { border-radius: var(--radius-lg); padding: var(--space-8); display: grid; gap: var(--space-6); align-content: start; position: relative; }
+    .plan.featured { border-color: rgba(16,185,129,.5); background: linear-gradient(180deg, rgba(5,150,105,.14), var(--glass-bg) 50%); }
+    .plan .badge { position: absolute; top: var(--space-6); right: var(--space-6); font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 999px; background: var(--color-accent); color: var(--color-on-accent); white-space: nowrap; }
+    .plan h3 { font-size: 20px; }
+    .price { display: flex; align-items: baseline; gap: var(--space-2); }
+    .price b { font-size: 40px; font-weight: 900; }
+    .price span { color: var(--color-muted-foreground); }
+    .plan ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-3); }
+    .plan li { display: flex; gap: var(--space-3); align-items: flex-start; }
+    .plan li .icon { color: #6EE7B7; margin-top: 2px; }
+    .plan .btn { width: 100%; }
+
+    /* ===== FAQ ===== */
+    .faq { max-width: 760px; margin: 0 auto; display: grid; gap: var(--space-3); }
+    .faq details { border-radius: var(--radius-md); }
+    .faq summary {
+      list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: var(--space-4);
+      min-height: 56px; padding: var(--space-4) var(--space-6); font-weight: 700; font-size: 17px; border-radius: var(--radius-md);
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary .icon { transition: transform 200ms var(--ease-out); color: var(--color-muted-foreground); }
+    .faq details[open] summary .icon { transform: rotate(180deg); }
+    .faq details p { padding: 0 var(--space-6) var(--space-6); color: var(--color-muted-foreground); }
+
+    /* ===== Final CTA ===== */
+    .final { border-radius: var(--radius-xl); padding: clamp(40px, 7vw, 80px) clamp(24px, 5vw, 64px); text-align: center; display: grid; gap: var(--space-6); justify-items: center;
+      background: linear-gradient(135deg, rgba(30,64,175,.55), rgba(5,150,105,.35)); }
+    .final h2 { font-size: clamp(28px, 4.6vw, 46px); font-weight: 900; }
+    .final p { font-size: 18px; color: #DCE4F0; max-width: 32em; }
+
+    /* ===== Footer ===== */
+    footer { padding: var(--space-12) 0; border-top: 1px solid var(--color-border); color: var(--color-muted-foreground); font-size: 14px; }
+    .foot { display: grid; gap: var(--space-6); }
+    .foot ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+    .foot a { color: var(--color-muted-foreground); text-decoration: none; display: inline-flex; min-height: 44px; align-items: center; }
+    .foot a:hover { color: var(--color-foreground); text-decoration: underline; }
+
+    /* ===== Reveal motion (JS-enhanced, content visible without JS) ===== */
+    .js .reveal { opacity: 0; transform: translateY(16px) scale(.98); }
+    .js .reveal.in {
+      opacity: 1; transform: none;
+      transition: opacity 420ms var(--ease-out), transform 450ms var(--ease-back);
+      transition-delay: calc(var(--i, 0) * 60ms);
+    }
+    .js .fill { transform: scaleX(0); }
+    .js .in .fill, .js .in.fill { transform: scaleX(1); transition: transform 900ms var(--ease-out) 300ms; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; transition-delay: 0ms !important; }
+      .js .reveal { opacity: 1; transform: none; }
+      .js .fill { transform: none; }
+      .feature:hover { transform: none; }
+    }
+
+    /* ===== Breakpoints (mobile-first) ===== */
+    @media (min-width: 768px) {
+      .stats { grid-template-columns: repeat(4, 1fr); }
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .steps { grid-template-columns: repeat(3, 1fr); }
+      .quotes { grid-template-columns: repeat(3, 1fr); }
+      .plans { grid-template-columns: repeat(2, 1fr); }
+      .foot { grid-template-columns: 1fr auto; align-items: center; }
+    }
+    @media (min-width: 1024px) {
+      .nav-links { display: flex; }
+      .menu-toggle, .mobile-menu, .mobile-menu.open { display: none; }
+      .nav-actions .btn-accent { display: inline-flex; }
+      .hero { padding-top: var(--space-24); }
+      .hero-grid { grid-template-columns: 1.1fr .9fr; }
+      .float-card { display: flex; }
+      .features { grid-template-columns: repeat(3, 1fr); }
+      .sim { grid-template-columns: 1fr 1fr; }
+    }
+    @media (forced-colors: active) {
+      .fill, .swatch { forced-color-adjust: none; }
+      .btn { border: 1px solid ButtonText; }
+    }
+  </style>
+</head>
+<body>
+  <!-- SVG icon sprite (Lucide, MIT) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
+    <symbol id="i-pie" viewBox="0 0 24 24"><path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></symbol>
+    <symbol id="i-utensils" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+    <symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></symbol>
+    <symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-trend" viewBox="0 0 24 24"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></symbol>
+  </svg>
+
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+  <div class="backdrop" aria-hidden="true">
+    <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div>
+  </div>
+
+  <header class="site-header glass">
+    <div class="container">
+      <nav class="nav" aria-label="주요 메뉴">
+        <a class="logo" href="#top" aria-label="모아 홈">
+          <span class="logo-mark" aria-hidden="true"><svg class="icon"><use href="#i-wallet"/></svg></span>
+          모아
+        </a>
+        <ul class="nav-links">
+          <li><a href="#features">기능</a></li>
+          <li><a href="#how">사용법</a></li>
+          <li><a href="#simulator">절약 계산기</a></li>
+          <li><a href="#pricing">요금제</a></li>
+          <li><a href="#faq">자주 묻는 질문</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="btn btn-accent btn-sm" href="#download">무료로 시작하기</a>
+          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="메뉴 열기">
+            <svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg>
+          </button>
+        </div>
+      </nav>
+      <div class="mobile-menu" id="mobile-menu">
+        <ul>
+          <li><a href="#features">기능</a></li>
+          <li><a href="#how">사용법</a></li>
+          <li><a href="#simulator">절약 계산기</a></li>
+          <li><a href="#pricing">요금제</a></li>
+          <li><a href="#faq">자주 묻는 질문</a></li>
+          <li><a class="btn btn-accent" href="#download">무료로 시작하기</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ===== Hero ===== -->
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow reveal" style="--i:0">
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#i-trend"/></svg>
+            평균 월 지출 18% 절감
+          </span>
+          <h1 id="hero-title" class="reveal" style="--i:1">새는 돈은 막고,<br><span class="grad">모이는 돈은 보이게.</span></h1>
+          <p class="hero-lead reveal" style="--i:2">
+            카드 결제는 자동으로 분류되고, 예산이 넘칠 것 같으면 미리 알려드려요.
+            3초 만에 기록하고 한눈에 확인하는 개인 가계부, 모아.
+          </p>
+          <div class="hero-ctas reveal" style="--i:3">
+            <a class="btn btn-accent" href="#download">
+              무료로 시작하기
+              <svg class="icon icon-sm icon-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+            </a>
+            <a class="btn btn-ghost" href="#features">기능 둘러보기</a>
+          </div>
+          <ul class="hero-meta reveal" style="--i:4">
+            <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>평생 무료 플랜</li>
+            <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>광고 없음</li>
+            <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>iOS · Android</li>
+          </ul>
+        </div>
+
+        <div class="mock-wrap reveal" style="--i:2">
+          <div class="phone" role="img" aria-label="모아 앱 화면 예시: 11월 남은 예산 716,000원. 지출 비중은 식비 34%, 쇼핑 26%, 주거·생활 24%, 교통 16%. 식비 예산 92% 사용으로 주의 표시.">
+            <div class="screen" aria-hidden="true">
+              <div class="screen-top"><strong>11월 가계부</strong><span>11.06 (금)</span></div>
+
+              <div class="card-m hero-number">
+                <div class="label">이번 달 남은 예산</div>
+                <div class="value num">716,000원</div>
+                <div class="sub num">예산 2,000,000원 중 1,284,000원 사용</div>
+              </div>
+
+              <div class="card-m donut-row">
+                <div class="donut-wrap">
+                  <!-- donut: pathLength 100, 1-unit gap between segments as surface spacer -->
+                  <svg class="donut" viewBox="0 0 42 42">
+                    <circle cx="21" cy="21" r="15.9" stroke="rgba(255,255,255,.06)"></circle>
+                    <circle class="seg" cx="21" cy="21" r="15.9" pathLength="100" stroke="var(--series-1)" stroke-dasharray="33 67" stroke-dashoffset="0"><title>식비 34% · 436,560원</title></circle>
+                    <circle class="seg" cx="21" cy="21" r="15.9" pathLength="100" stroke="var(--series-2)" stroke-dasharray="25 75" stroke-dashoffset="-34"><title>쇼핑 26% · 333,840원</title></circle>
+                    <circle class="seg" cx="21" cy="21" r="15.9" pathLength="100" stroke="var(--series-3)" stroke-dasharray="23 77" stroke-dashoffset="-60"><title>주거·생활 24% · 308,160원</title></circle>
+                    <circle class="seg" cx="21" cy="21" r="15.9" pathLength="100" stroke="var(--series-4)" stroke-dasharray="15 85" stroke-dashoffset="-84"><title>교통 16% · 205,440원</title></circle>
+                  </svg>
+                  <div class="donut-center"><div><span>총 지출</span><b class="num">128만</b></div></div>
+                </div>
+                <ul class="legend">
+                  <li><i class="swatch" style="background:var(--series-1)"></i>식비<b class="num">34%</b></li>
+                  <li><i class="swatch" style="background:var(--series-2)"></i>쇼핑<b class="num">26%</b></li>
+                  <li><i class="swatch" style="background:var(--series-3)"></i>주거·생활<b class="num">24%</b></li>
+                  <li><i class="swatch" style="background:var(--series-4)"></i>교통<b class="num">16%</b></li>
+                </ul>
+              </div>
+
+              <div class="card-m meters">
+                <div>
+                  <div class="meter-head"><b>식비</b><span class="warn num"><svg class="icon"><use href="#i-alert"/></svg>92% · 주의</span></div>
+                  <div class="track"><div class="fill warning" style="width:92%"></div></div>
+                </div>
+                <div>
+                  <div class="meter-head"><b>쇼핑</b><span class="num">61%</span></div>
+                  <div class="track"><div class="fill" style="width:61%"></div></div>
+                </div>
+                <div>
+                  <div class="meter-head"><b>교통</b><span class="num">48%</span></div>
+                  <div class="track"><div class="fill" style="width:48%"></div></div>
+                </div>
+              </div>
+
+              <div class="card-m tx">
+                <div class="tx-item">
+                  <span class="tx-ico"><svg class="icon"><use href="#i-coffee"/></svg></span>
+                  <span class="t">동네 카페<small>식비 · 오늘 08:42</small></span>
+                  <span class="amt num">-4,500</span>
+                </div>
+                <div class="tx-item">
+                  <span class="tx-ico"><svg class="icon"><use href="#i-bag"/></svg></span>
+                  <span class="t">온라인 쇼핑<small>쇼핑 · 어제</small></span>
+                  <span class="amt num">-32,900</span>
+                </div>
+                <div class="tx-item">
+                  <span class="tx-ico"><svg class="icon"><use href="#i-banknote"/></svg></span>
+                  <span class="t">용돈 입금<small>수입 · 11.04</small></span>
+                  <span class="amt in num">+100,000</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="float-card glass float-1" aria-hidden="true">
+            <span class="ico"><svg class="icon"><use href="#i-bell"/></svg></span>
+            <span><b>식비 예산 92% 도달</b><small>이번 주는 집밥 어떠세요?</small></span>
+          </div>
+          <div class="float-card glass float-2" aria-hidden="true">
+            <span class="ico"><svg class="icon"><use href="#i-trend"/></svg></span>
+            <span><b class="num">지난달보다 12만원 절약</b><small>10월 대비 지출 -8.6%</small></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Trust stats ===== -->
+    <div class="container">
+      <div class="stats glass reveal" role="list" aria-label="모아 이용 현황">
+        <div class="stat" role="listitem"><b class="num">120만+</b><span>누적 사용자</span></div>
+        <div class="stat" role="listitem"><b class="num">4.8</b><span>앱스토어 평점</span></div>
+        <div class="stat" role="listitem"><b class="num">3초</b><span>평균 기록 시간</span></div>
+        <div class="stat" role="listitem"><b class="num">18%</b><span>평균 지출 절감</span></div>
+      </div>
+    </div>
+
+    <!-- ===== Features ===== -->
+    <section id="features" aria-labelledby="features-title">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">주요 기능</span>
+          <h2 id="features-title">기록은 가볍게, 관리는 똑똑하게</h2>
+          <p>귀찮은 정리는 모아가 대신할게요. 당신은 숫자만 확인하면 됩니다.</p>
+        </div>
+        <div class="features">
+          <article class="feature glass reveal" style="--i:0">
+            <span class="ico" aria-hidden="true"><svg class="icon"><use href="#i-tag"/></svg></span>
+            <h3>자동 카테고리 분류</h3>
+            <p>카드·계좌 내역을 불러오면 식비, 교통, 쇼핑으로 알아서 분류해요. 한 번 고치면 다음부터 기억합니다.</p>
+          </article>
+          <article class="feature glass reveal" style="--i:1">
+            <span class="ico" aria-hidden="true"><svg class="icon"><use href="#i-bell"/></svg></span>
+            <h3>예산 초과 미리 알림</h3>
+            <p>카테고리별 예산의 80%에 도달하면 알려드려요. 월말에 깜짝 놀랄 일이 사라집니다.</p>
+          </article>
+          <article class="feature glass reveal" style="--i:2">
+            <span class="ico" aria-hidden="true"><svg class="icon"><use href="#i-pie"/></svg></span>
+            <h3>한눈에 보는 월간 리포트</h3>
+            <p>어디에 얼마나 썼는지, 지난달과 무엇이 달라졌는지 차트 한 장으로 정리해 드려요.</p>
+          </article>
+          <article class="feature glass reveal" style="--i:3">
+            <span class="ico" aria-hidden="true"><svg class="icon"><use href="#i-calendar"/></svg></span>
+            <h3>고정지출 캘린더</h3>
+            <p>월세, 구독료, 보험료 결제일을 달력에 모아 보여주고 하루 전에 알려드려요.</p>
+          </article>
+          <article class="feature glass reveal" style="--i:4">
+            <span class="ico" aria-hidden="true"><svg class="icon"><use href="#i-users"/></svg></span>
+            <h3>함께 쓰는 가계부</h3>
+            <p>배우자, 룸메이트와 가계부를 공유하세요. 공동 지출과 개인 지출을 따로 관리할 수 있어요.</p>
+          </article>
+          <article class="feature glass reveal" style="--i:5">
+            <span class="ico" aria-hidden="true"><svg class="icon"><use href="#i-shield"/></svg></span>
+            <h3>안전한 데이터 보호</h3>
+            <p>모든 데이터는 암호화해 저장하고, 앱 잠금과 생체 인증을 지원해요. 금융 정보는 절대 판매하지 않습니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== How it works ===== -->
+    <section id="how" aria-labelledby="how-title">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">사용법</span>
+          <h2 id="how-title">시작까지 딱 3단계</h2>
+          <p>복잡한 설정 없이 오늘부터 바로 쓸 수 있어요.</p>
+        </div>
+        <ol class="steps">
+          <li class="step glass reveal" style="--i:0">
+            <h3>앱 설치 후 가입</h3>
+            <p>이메일이나 간편 로그인으로 30초 만에 시작하세요.</p>
+          </li>
+          <li class="step glass reveal" style="--i:1">
+            <h3>카드·계좌 연결</h3>
+            <p>원하는 계좌만 골라 연결하거나, 직접 입력만으로도 충분해요.</p>
+          </li>
+          <li class="step glass reveal" style="--i:2">
+            <h3>예산 세우고 확인</h3>
+            <p>지난 지출을 바탕으로 추천 예산을 제안해 드려요. 이제 확인만 하면 끝.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== Savings simulator ===== -->
+    <section id="simulator" aria-labelledby="sim-title">
+      <div class="container">
+        <div class="sim glass reveal">
+          <div class="sim-copy">
+            <span class="eyebrow" style="justify-self:start">절약 계산기</span>
+            <h2 id="sim-title">작은 습관이 1년 뒤에는<br>얼마가 될까요?</h2>
+            <p>커피 한 잔, 택시 한 번. 하루에 아끼는 금액을 움직여 보세요. 모아는 이런 작은 차이를 매일 보여드려요.</p>
+          </div>
+          <div class="sim-panel">
+            <div class="field">
+              <label for="daily">하루에 아끼는 금액 <output id="daily-out" for="daily" class="num">4,500원</output></label>
+              <input id="daily" type="range" min="1000" max="20000" step="500" value="4500" aria-describedby="daily-hint">
+              <p class="hint" id="daily-hint">1,000원부터 20,000원까지 500원 단위로 조절할 수 있어요.</p>
+            </div>
+            <div class="results" aria-live="polite">
+              <div class="result"><span>한 달이면</span><b class="num" id="month-out">135,000원</b></div>
+              <div class="result big"><span>1년이면</span><b class="num" id="year-out">1,642,500원</b></div>
+            </div>
+            <a class="btn btn-accent" href="#download">
+              나의 절약 목표 세우기
+              <svg class="icon icon-sm icon-arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Comparison ===== -->
+    <section aria-labelledby="compare-title">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">비교</span>
+          <h2 id="compare-title">엑셀과 메모장은 이제 그만</h2>
+        </div>
+        <div class="table-wrap glass reveal" tabindex="0" role="region" aria-labelledby="compare-title">
+          <table>
+            <caption>작은 화면에서는 표를 좌우로 밀어 볼 수 있어요.</caption>
+            <thead>
+              <tr>
+                <th scope="col"><span class="sr-only">기능</span></th>
+                <th scope="col">엑셀</th>
+                <th scope="col">메모 앱</th>
+                <th scope="col" class="us">모아</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">카드 내역 자동 불러오기</th>
+                <td><span class="no"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>미지원</span></td>
+                <td><span class="no"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>미지원</span></td>
+                <td class="us"><span class="yes"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>지원</span></td>
+              </tr>
+              <tr>
+                <th scope="row">자동 카테고리 분류</th>
+                <td><span class="no"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>수식 필요</span></td>
+                <td><span class="no"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>미지원</span></td>
+                <td class="us"><span class="yes"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>지원</span></td>
+              </tr>
+              <tr>
+                <th scope="row">예산 초과 알림</th>
+                <td><span class="no"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>미지원</span></td>
+                <td><span class="no"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>미지원</span></td>
+                <td class="us"><span class="yes"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>지원</span></td>
+              </tr>
+              <tr>
+                <th scope="row">모바일에서 3초 기록</th>
+                <td><span class="no"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>불편</span></td>
+                <td><span class="yes"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>가능</span></td>
+                <td class="us"><span class="yes"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>지원</span></td>
+              </tr>
+              <tr>
+                <th scope="row">월간 리포트·차트</th>
+                <td><span class="yes"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>직접 제작</span></td>
+                <td><span class="no"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-x"/></svg>미지원</span></td>
+                <td class="us"><span class="yes"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>자동 생성</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Testimonials ===== -->
+    <section aria-labelledby="reviews-title">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">사용자 후기</span>
+          <h2 id="reviews-title">가계부가 처음으로 꾸준해졌어요</h2>
+        </div>
+        <div class="quotes">
+          <figure class="quote glass reveal" style="--i:0">
+            <div class="stars" role="img" aria-label="별점 5점 만점에 5점">
+              <svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg>
+            </div>
+            <blockquote>“매달 어디로 돈이 새는지 몰랐는데, 배달비가 식비의 절반이었더라고요. 두 달 만에 월 20만 원을 줄였어요.”</blockquote>
+            <figcaption><span class="avatar" aria-hidden="true">김</span><span><b>김지윤</b>직장인 · 3년 차</span></figcaption>
+          </figure>
+          <figure class="quote glass reveal" style="--i:1">
+            <div class="stars" role="img" aria-label="별점 5점 만점에 5점">
+              <svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg>
+            </div>
+            <blockquote>“아내와 공동 가계부를 쓰면서 생활비 다툼이 없어졌어요. 고정지출 캘린더는 정말 신의 한 수예요.”</blockquote>
+            <figcaption><span class="avatar" aria-hidden="true" style="background:#047857">박</span><span><b>박서준</b>신혼부부</span></figcaption>
+          </figure>
+          <figure class="quote glass reveal" style="--i:2">
+            <div class="stars" role="img" aria-label="별점 5점 만점에 5점">
+              <svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><svg class="icon" aria-hidden="true"><use href="#i-star"/></svg>
+            </div>
+            <blockquote>“자취 시작하면서 썼는데 입력이 너무 쉬워서 매일 기록하게 돼요. 예산 알림 덕분에 월말이 편해졌어요.”</blockquote>
+            <figcaption><span class="avatar" aria-hidden="true" style="background:#5B21B6">이</span><span><b>이하은</b>대학생</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Pricing ===== -->
+    <section id="pricing" aria-labelledby="pricing-title">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">요금제</span>
+          <h2 id="pricing-title">기본 기능은 평생 무료</h2>
+          <p>더 깊은 분석이 필요할 때만 프리미엄으로 업그레이드하세요.</p>
+        </div>
+        <div class="plans">
+          <article class="plan glass reveal" style="--i:0" aria-labelledby="plan-free">
+            <h3 id="plan-free">무료</h3>
+            <div class="price"><b class="num">0원</b><span>/ 평생</span></div>
+            <ul>
+              <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>수입·지출 무제한 기록</li>
+              <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>카드·계좌 3개 연결</li>
+              <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>자동 카테고리 분류</li>
+              <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>월간 기본 리포트</li>
+            </ul>
+            <a class="btn btn-ghost" href="#download">무료로 시작하기</a>
+          </article>
+          <article class="plan featured glass reveal" style="--i:1" aria-labelledby="plan-premium">
+            <span class="badge">가장 인기</span>
+            <h3 id="plan-premium">프리미엄</h3>
+            <div class="price"><b class="num">3,900원</b><span>/ 월</span></div>
+            <ul>
+              <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>무료 플랜의 모든 기능</li>
+              <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>카드·계좌 무제한 연결</li>
+              <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>예산 초과 알림 · 고정지출 캘린더</li>
+              <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>공동 가계부 (최대 4명)</li>
+              <li><svg class="icon icon-sm" aria-hidden="true"><use href="#i-check"/></svg>엑셀 내보내기 · 연간 리포트</li>
+            </ul>
+            <a class="btn btn-accent" href="#download">14일 무료 체험</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAQ ===== -->
+    <section id="faq" aria-labelledby="faq-title">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">FAQ</span>
+          <h2 id="faq-title">자주 묻는 질문</h2>
+        </div>
+        <div class="faq">
+          <details class="glass">
+            <summary>계좌를 연결하지 않아도 쓸 수 있나요?<svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <p>네. 직접 입력만으로도 모든 기본 기능을 사용할 수 있어요. 연결은 원할 때 언제든 추가하거나 해제할 수 있습니다.</p>
+          </details>
+          <details class="glass">
+            <summary>제 금융 정보는 안전한가요?<svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <p>모든 데이터는 전송과 저장 단계에서 암호화되며, 앱 잠금과 생체 인증을 지원합니다. 모아는 사용자의 데이터를 광고나 제3자에게 판매하지 않아요.</p>
+          </details>
+          <details class="glass">
+            <summary>프리미엄은 언제든 해지할 수 있나요?<svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <p>네. 설정 화면에서 클릭 한 번으로 해지할 수 있고, 남은 기간까지는 프리미엄 기능이 유지됩니다. 해지 후에도 기록은 그대로 남아요.</p>
+          </details>
+          <details class="glass">
+            <summary>다른 가계부 앱의 기록을 옮겨올 수 있나요?<svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+            <p>엑셀(CSV) 파일로 내보낸 기록이라면 가져오기 기능으로 한 번에 옮길 수 있어요. 카테고리도 자동으로 맞춰 드립니다.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Final CTA ===== -->
+    <section id="download" aria-labelledby="final-title">
+      <div class="container">
+        <div class="final glass reveal">
+          <h2 id="final-title">이번 달부터, 모으는 사람이 되어 보세요</h2>
+          <p>설치는 1분, 기록은 3초. 지금 시작하면 다음 달 리포트가 달라집니다.</p>
+          <div class="hero-ctas" style="justify-content:center">
+            <a class="btn btn-accent" href="#">App Store에서 받기</a>
+            <a class="btn btn-ghost" href="#">Google Play에서 받기</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container foot">
+      <div>
+        <a class="logo" href="#top" aria-label="모아 홈">
+          <span class="logo-mark" aria-hidden="true"><svg class="icon"><use href="#i-wallet"/></svg></span>
+          모아
+        </a>
+        <p>© 2026 Moa. All rights reserved.</p>
+      </div>
+      <nav aria-label="하단 메뉴">
+        <ul>
+          <li><a href="#">이용약관</a></li>
+          <li><a href="#">개인정보처리방침</a></li>
+          <li><a href="#">고객센터</a></li>
+          <li><a href="#">블로그</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      document.documentElement.classList.add('js');
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* Mobile menu */
+      var toggle = document.querySelector('.menu-toggle');
+      var menu = document.getElementById('mobile-menu');
+      var useEl = toggle.querySelector('use');
+      function setMenu(open) {
+        menu.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? '메뉴 닫기' : '메뉴 열기');
+        useEl.setAttribute('href', open ? '#i-x' : '#i-menu');
+      }
+      toggle.addEventListener('click', function () { setMenu(!menu.classList.contains('open')); });
+      menu.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && menu.classList.contains('open')) { setMenu(false); toggle.focus(); }
+      });
+
+      /* Scroll reveal (staggered via --i) */
+      var items = document.querySelectorAll('.reveal');
+      if (reduce || !('IntersectionObserver' in window)) {
+        items.forEach(function (el) { el.classList.add('in'); });
+      } else {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+          });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+        items.forEach(function (el) { io.observe(el); });
+      }
+
+      /* Savings simulator */
+      var range = document.getElementById('daily');
+      var dailyOut = document.getElementById('daily-out');
+      var monthOut = document.getElementById('month-out');
+      var yearOut = document.getElementById('year-out');
+      var fmt = new Intl.NumberFormat('ko-KR');
+      function update() {
+        var v = Number(range.value);
+        var pct = (v - range.min) / (range.max - range.min) * 100;
+        range.style.setProperty('--p', pct + '%');
+        range.setAttribute('aria-valuetext', '하루 ' + fmt.format(v) + '원');
+        dailyOut.textContent = fmt.format(v) + '원';
+        monthOut.textContent = fmt.format(v * 30) + '원';
+        yearOut.textContent = fmt.format(v * 365) + '원';
+      }
+      range.addEventListener('input', update);
+      update();
+    })();
+  </script>
+</body>
+</html>
